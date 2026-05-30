@@ -183,7 +183,7 @@ def extract_events_claude(message_text, message_date, client):
     )
     resp = client.messages.create(
         model=ANTHROPIC_MODEL,
-        max_tokens=1024,
+        max_tokens=8000,  # monthly list posts can hold many events
         system=EXTRACT_SYSTEM,
         messages=[{"role": "user", "content": user}],
     )
@@ -249,6 +249,41 @@ def airtable_existing_source_ids():
         if not offset:
             break
     return out
+
+
+def airtable_preflight():
+    """Quick read to confirm token/base/table are reachable. Fails in ~1s if not."""
+    import requests
+    r = requests.get(_airtable_url(), headers=airtable_headers(),
+                     params={"pageSize": 1}, timeout=20)
+    if r.status_code >= 400:
+        print("  Airtable preflight error:", r.status_code, r.text[:400])
+    r.raise_for_status()
+
+
+def airtable_existing_event_keys():
+    """Return the set of event_id keys already in Airtable (any status), computed
+    from Title + StartDate + City, so we can dedupe by content (not just message)."""
+    import requests
+    keys, offset = set(), None
+    while True:
+        params = {"fields[]": ["Title", "StartDate", "City"], "pageSize": 100}
+        if offset:
+            params["offset"] = offset
+        r = requests.get(_airtable_url(), headers=airtable_headers(), params=params, timeout=30)
+        r.raise_for_status()
+        data = r.json()
+        for rec in data.get("records", []):
+            f = rec.get("fields", {})
+            keys.add(event_id({
+                "title": f.get("Title", ""),
+                "start_date": f.get("StartDate", ""),
+                "city": f.get("City", ""),
+            }))
+        offset = data.get("offset")
+        if not offset:
+            break
+    return keys
 
 
 def airtable_create(records):
