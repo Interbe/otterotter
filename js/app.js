@@ -347,7 +347,9 @@
 
     loadJSON("data/events.json")
       .then(function (data) {
-        allEvents = (data.events || []).filter(function (e) { return e && e.id; });
+        allEvents = (data.events || []).filter(function (e) {
+          return e && e.id && e.source !== "sample";  // hide seed/example events
+        });
         populateCountryFilter();
         populateMonthFilter();
         applyFilters();
