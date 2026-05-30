@@ -1,0 +1,41 @@
+{
+  "_comment": "Fake Telegram messages for offline --dry-run. 'expected' is what Claude would extract (the real run calls Claude instead).",
+  "messages": [
+    {
+      "id": 1001,
+      "date": "2026-06-01",
+      "text": "Jam this Saturday 7pm at Bora Bora, Aarhus! All levels welcome :)",
+      "expected": [
+        {"title": "Saturday Contact Jam", "description": "Open jam, all levels welcome.", "type": "jam", "start_date": "2026-06-06", "end_date": "2026-06-06", "time": "19:00", "city": "Aarhus", "country": "Denmark", "venue": "Bora Bora", "link": null}
+      ]
+    },
+    {
+      "id": 1002,
+      "date": "2026-06-02",
+      "text": "Thanks everyone for the lovely dance yesterday <3",
+      "expected": []
+    },
+    {
+      "id": 1003,
+      "date": "2026-06-03",
+      "text": "Weekend workshop 'Sensing Space' June 13-14 at Weld, Stockholm. Info: https://example.org/space",
+      "expected": [
+        {"title": "Sensing Space Workshop", "description": "Weekend workshop on spatial awareness.", "type": "workshop", "start_date": "2026-06-13", "end_date": "2026-06-14", "time": "10:00", "city": "Stockholm", "country": "Sweden", "venue": "Weld", "link": "https://example.org/space"}
+      ]
+    },
+    {
+      "id": 1004,
+      "date": "2026-06-04",
+      "text": "Anyone driving to Berlin next week? Looking to share a ride.",
+      "expected": []
+    },
+    {
+      "id": 1005,
+      "date": "2026-06-05",
+      "text": "ECITE teachers exchange in Freiburg, Germany, Aug 10-16. A week of research and jams.",
+      "expected": [
+        {"title": "ECITE Freiburg", "description": "International CI teachers exchange.", "type": "festival", "start_date": "2026-08-10", "end_date": "2026-08-16", "time": null, "city": "Freiburg", "country": "Germany", "venue": null, "link": null}
+      ]
+    }
+  ]
+}

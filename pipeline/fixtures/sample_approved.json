@@ -1,0 +1,17 @@
+{
+  "_comment": "Fake Airtable 'Approved' rows for offline --dry-run of sync_approved.py. The last one has no date and should be skipped.",
+  "records": [
+    {
+      "id": "recAAA",
+      "fields": {"Title": "Saturday Contact Jam", "Description": "Open jam.", "Type": "jam", "StartDate": "2026-06-06", "EndDate": "2026-06-06", "Time": "19:00", "City": "Aarhus", "Country": "Denmark", "Venue": "Bora Bora", "Lat": 56.1518, "Lng": 10.2069, "Link": "", "SourceMsg": "1001", "Status": "Approved", "Added": "2026-06-01"}
+    },
+    {
+      "id": "recBBB",
+      "fields": {"Title": "Sensing Space Workshop", "Type": "workshop", "StartDate": "2026-06-13", "EndDate": "2026-06-14", "City": "Stockholm", "Country": "Sweden", "Venue": "Weld", "Lat": 59.3157, "Lng": 18.061, "Status": "Approved", "SourceMsg": "1003"}
+    },
+    {
+      "id": "recCCC",
+      "fields": {"Title": "Mystery Event No Date", "Type": "jam", "City": "Berlin", "Country": "Germany", "Lat": 52.52, "Lng": 13.405, "Status": "Approved", "SourceMsg": "9999"}
+    }
+  ]
+}
