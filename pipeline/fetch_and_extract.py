@@ -130,6 +130,7 @@ def main():
     for m in messages:
         src = str(m["id"])
         events = extractor(m["text"], m.get("date", oc.today_iso()))
+        print("  msg", src, "->", len(events), "events extracted")
         for ev in events:
             oc.geocode_event(ev, cache, online=not DRY, mock_table=MOCK_GEO)
             key = oc.event_id(ev)

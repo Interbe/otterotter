@@ -159,7 +159,7 @@ concrete event (it's a discussion, a photo, a thank-you, a question, spam), retu
 
 Each event object must have these keys (use null when unknown, never invent):
   title        short event name
-  description  one or two sentences, plain text
+  description  one short sentence, plain text, max ~140 characters
   type         one of: jam, class, workshop, festival (use "festival" for \
 multi-day gatherings and retreats)
   start_date   "YYYY-MM-DD" (resolve relative dates like "this Saturday" using the \
@@ -194,23 +194,52 @@ def extract_events_claude(message_text, message_date, client):
 
 
 def _parse_events_json(text):
-    """Robustly pull {"events":[...]} out of a model response."""
+    """Pull events out of a model response. Tolerates truncated output by
+    salvaging every complete event object even if the surrounding array is cut off."""
     text = text.strip()
     if text.startswith("```"):
         text = re.sub(r"^```[a-zA-Z]*\n?", "", text)
         text = re.sub(r"\n?```$", "", text).strip()
+    # 1) clean parse
     try:
         data = json.loads(text)
+        evs = data.get("events", []) if isinstance(data, dict) else \
+            (data if isinstance(data, list) else [])
+        return [e for e in evs if isinstance(e, dict) and _valid_candidate(e)]
     except json.JSONDecodeError:
-        m = re.search(r"\{.*\}", text, re.DOTALL)
-        if not m:
-            return []
+        pass
+    # 2) salvage: parse each complete {...} event object individually
+    evs = []
+    for sub in _salvage_objects(text):
         try:
-            data = json.loads(m.group(0))
+            e = json.loads(sub)
         except json.JSONDecodeError:
-            return []
-    evs = data.get("events", []) if isinstance(data, dict) else []
-    return [e for e in evs if isinstance(e, dict) and _valid_candidate(e)]
+            continue
+        if isinstance(e, dict) and _valid_candidate(e):
+            evs.append(e)
+    return evs
+
+
+def _salvage_objects(text):
+    """Return every brace-balanced {...} substring that looks like an event
+    (contains a "title" key and is not the outer {"events": ...} wrapper)."""
+    out, seen, n = [], set(), len(text)
+    for i, ch in enumerate(text):
+        if ch != "{":
+            continue
+        depth = 0
+        for j in range(i, n):
+            if text[j] == "{":
+                depth += 1
+            elif text[j] == "}":
+                depth -= 1
+                if depth == 0:
+                    sub = text[i:j + 1]
+                    if '"title"' in sub and '"events"' not in sub and sub not in seen:
+                        seen.add(sub)
+                        out.append(sub)
+                    break
+    return out
 
 
 def _valid_candidate(e):
