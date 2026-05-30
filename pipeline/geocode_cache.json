@@ -10,5 +10,453 @@
   "freiburg, germany": {
     "lat": 47.999,
     "lng": 7.8421
+  },
+  "stade, germany": {
+    "lat": 53.599794,
+    "lng": 9.475438
+  },
+  "marameo, germany": {
+    "lat": 52.4881298,
+    "lng": 13.3917754
+  },
+  "germany": {
+    "lat": 51.1638175,
+    "lng": 10.4478313
+  },
+  "ziz art and social area, strada paris 5, cluj-napoca, romania": {
+    "lat": null,
+    "lng": null
+  },
+  "cluj-napoca, romania": {
+    "lat": 46.769379,
+    "lng": 23.5899542
+  },
+  "ponderosa, germany": {
+    "lat": 48.4452764,
+    "lng": 9.1894985
+  },
+  "velbert, germany": {
+    "lat": 51.3406713,
+    "lng": 7.0439912
+  },
+  "ponderosa, berlin, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "berlin, germany": {
+    "lat": 52.5173885,
+    "lng": 13.3951309
+  },
+  "fellershof, velbert, germany": {
+    "lat": 51.3644501,
+    "lng": 7.1416158
+  },
+  "asturias, spain": {
+    "lat": 43.3133868,
+    "lng": -5.94192
+  },
+  "lourenzá, spain": {
+    "lat": 43.459566,
+    "lng": -7.2850512
+  },
+  "spain": {
+    "lat": 39.3260685,
+    "lng": -4.8379791
+  },
+  "san casciano in val di pesa, italy": {
+    "lat": 43.6569596,
+    "lng": 11.1856679
+  },
+  "lichtenstern, italy": {
+    "lat": 46.5313758,
+    "lng": 11.4340892
+  },
+  "rustrel, france": {
+    "lat": 43.9242848,
+    "lng": 5.4843752
+  },
+  "baile en el aire, alpujarra, granada, spain": {
+    "lat": null,
+    "lng": null
+  },
+  "granada, spain": {
+    "lat": 37.1734995,
+    "lng": -3.5995337
+  },
+  "regensburg, germany": {
+    "lat": 49.0195333,
+    "lng": 12.0974869
+  },
+  "helsinki, finland": {
+    "lat": 60.1666204,
+    "lng": 24.9435408
+  },
+  "poland": {
+    "lat": 52.215933,
+    "lng": 19.134422
+  },
+  "ibiza, spain": {
+    "lat": 38.9743901,
+    "lng": 1.4197463
+  },
+  "almería, spain": {
+    "lat": 36.8685739,
+    "lng": -2.3120282
+  },
+  "uster, switzerland": {
+    "lat": 47.3512065,
+    "lng": 8.7179221
+  },
+  "leipzig, germany": {
+    "lat": 51.3406321,
+    "lng": 12.3747329
+  },
+  "italy": {
+    "lat": 42.6384261,
+    "lng": 12.674297
+  },
+  "sommerecke im schwarzwald, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "tänzerdorf naturfreudehaus sommerecke, sommerecke, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "sommerecke, germany": {
+    "lat": 48.2555332,
+    "lng": 8.2679165
+  },
+  "genova, italy": {
+    "lat": 44.40726,
+    "lng": 8.9338624
+  },
+  "windberg community, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "estúdio yucca, tavira, portugal": {
+    "lat": null,
+    "lng": null
+  },
+  "tavira, portugal": {
+    "lat": 37.1262493,
+    "lng": -7.6499121
+  },
+  "residency mc6, carpathians, ukraine": {
+    "lat": null,
+    "lng": null
+  },
+  "carpathians, ukraine": {
+    "lat": 48.2963694,
+    "lng": 23.669289
+  },
+  "vizcaya, spain": {
+    "lat": 43.238482,
+    "lng": -2.8516316
+  },
+  "medieval village in north rome, rome, italy": {
+    "lat": null,
+    "lng": null
+  },
+  "rome, italy": {
+    "lat": 41.8933203,
+    "lng": 12.4829321
+  },
+  "tanzfabrik berlin, berlin, germany": {
+    "lat": 52.4907694,
+    "lng": 13.379104
+  },
+  "naarden, netherlands": {
+    "lat": 52.2957628,
+    "lng": 5.1633636
+  },
+  "la colle de nouvé, provence, france": {
+    "lat": 43.4337518,
+    "lng": 6.2508224
+  },
+  "casa rural olivera, sant mateu, spain": {
+    "lat": null,
+    "lng": null
+  },
+  "sant mateu, spain": {
+    "lat": 40.4650329,
+    "lng": 0.1793192
+  },
+  "motion lab, cologne, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "cologne, germany": {
+    "lat": 50.938361,
+    "lng": 6.959974
+  },
+  "azores, portugal": {
+    "lat": 37.8085565,
+    "lng": -25.4731374
+  },
+  "czech republic": {
+    "lat": 49.7439047,
+    "lng": 15.3381061
+  },
+  "kunaku, oderberg, germany": {
+    "lat": 52.8695259,
+    "lng": 14.0577139
+  },
+  "studio neumond, velbert, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "phynixtanzt berlin, berlin, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "basel, switzerland": {
+    "lat": 47.5581077,
+    "lng": 7.5878261
+  },
+  "st matthews community hall, stretford, manchester, united kingdom": {
+    "lat": null,
+    "lng": null
+  },
+  "manchester, united kingdom": {
+    "lat": 53.4424618,
+    "lng": -2.2324547
+  },
+  "balneario casa pallotti, vizcaya, spain": {
+    "lat": 43.2445611,
+    "lng": -3.3697302
+  },
+  "lake studios berlin, berlin, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "eden studios, dock 11, berlin, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "studio2, berlin, germany": {
+    "lat": 52.485159,
+    "lng": 13.3924099
+  },
+  "harberton, united kingdom": {
+    "lat": 50.4116638,
+    "lng": -3.7239172
+  },
+  "ökodorf sieben linden, germany": {
+    "lat": 52.6895531,
+    "lng": 11.14389
+  },
+  "triade, st. pauli, hamburg, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "hamburg, germany": {
+    "lat": 53.5501721,
+    "lng": 10.0013165
+  },
+  "dance studio, camogli, italy": {
+    "lat": null,
+    "lng": null
+  },
+  "camogli, italy": {
+    "lat": 44.3511373,
+    "lng": 9.1524917
+  },
+  "dragon orchard, putley, united kingdom": {
+    "lat": 52.0406469,
+    "lng": -2.5104306
+  },
+  "warsaw, poland": {
+    "lat": 52.2333742,
+    "lng": 21.0711489
+  },
+  "france": {
+    "lat": 46.603354,
+    "lng": 1.8883335
+  },
+  "corfu, greece": {
+    "lat": 39.591337,
+    "lng": 19.8596189
+  },
+  "amsterdam, netherlands": {
+    "lat": 52.3730796,
+    "lng": 4.8924534
+  },
+  "innsbruck, austria": {
+    "lat": 47.2654296,
+    "lng": 11.3927685
+  },
+  "hofgut ruckhardtshausen, hohenlohe, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "hohenlohe, germany": {
+    "lat": 51.2176865,
+    "lng": 12.2217156
+  },
+  "ankara, turkey": {
+    "lat": 39.9207759,
+    "lng": 32.8540497
+  },
+  "nature community, schönsee, germany": {
+    "lat": 49.5135851,
+    "lng": 12.5341109
+  },
+  "tänzerdorf portugal - vale bacias, alentejo, portugal": {
+    "lat": null,
+    "lng": null
+  },
+  "alentejo, portugal": {
+    "lat": 38.0551003,
+    "lng": -7.8605799
+  },
+  "tänzerdorf portugal, alentejo, portugal": {
+    "lat": null,
+    "lng": null
+  },
+  "sommerecke, black forest, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "black forest, germany": {
+    "lat": 48.2634439,
+    "lng": 8.1647488
+  },
+  "var, france": {
+    "lat": 43.4173551,
+    "lng": 6.2664637
+  },
+  "schloss glarisegg, steckborn, switzerland": {
+    "lat": 47.6548109,
+    "lng": 8.9566674
+  },
+  "hauteville, france": {
+    "lat": 50.2736375,
+    "lng": 2.573024
+  },
+  "mosteiro, lugo, spain": {
+    "lat": 42.6146292,
+    "lng": -7.4496103
+  },
+  "seminarhaus flackl, vienna, austria": {
+    "lat": null,
+    "lng": null
+  },
+  "vienna, austria": {
+    "lat": 48.2083537,
+    "lng": 16.3725042
+  },
+  "cabasse, france": {
+    "lat": 43.4262478,
+    "lng": 6.2217233
+  },
+  "lalita devi, sierra de gata, cáceres, spain": {
+    "lat": null,
+    "lng": null
+  },
+  "cáceres, spain": {
+    "lat": 39.4745175,
+    "lng": -6.3716761
+  },
+  "eden studios / dock11 berlin, berlin, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "spazio il mulino, tuscany, italy": {
+    "lat": null,
+    "lng": null
+  },
+  "tuscany, italy": {
+    "lat": 43.4586541,
+    "lng": 11.1389204
+  },
+  "ponderosa e.v., gutshof 3, lunow-stolzenhagen, germany": {
+    "lat": 52.9476801,
+    "lng": 14.1044128
+  },
+  "findhorn ecovillage, findhorn, united kingdom": {
+    "lat": 57.6519193,
+    "lng": -3.5917893
+  },
+  "barnin, germany": {
+    "lat": 53.5946015,
+    "lng": 11.6963089
+  },
+  "drôme, france": {
+    "lat": 44.7295348,
+    "lng": 5.2046372
+  },
+  "tänzerdorf an der sommerecke, black forest, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "quinta fonte dos passos, serra da estrela, portugal": {
+    "lat": null,
+    "lng": null
+  },
+  "serra da estrela, portugal": {
+    "lat": 40.4358994,
+    "lng": -7.5168655
+  },
+  "black forest sommerecke, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "sintra, portugal": {
+    "lat": 38.8355446,
+    "lng": -9.3522371
+  },
+  "leipzig süd, leipzig, germany": {
+    "lat": 51.3996133,
+    "lng": 12.2905778
+  },
+  "klingemühle – by the lake, klingemühle, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "klingemühle, germany": {
+    "lat": 52.1006829,
+    "lng": 14.4316386
+  },
+  "quinta braz, algarve, portugal": {
+    "lat": null,
+    "lng": null
+  },
+  "algarve, portugal": {
+    "lat": 37.2449218,
+    "lng": -8.1959563
+  },
+  "nature community in schönsee, schönsee, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "schönsee, germany": {
+    "lat": 49.5105095,
+    "lng": 12.5435127
+  },
+  "community place windberg e.v., erfurt, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "erfurt, germany": {
+    "lat": 50.9777974,
+    "lng": 11.0287364
+  },
+  "sicily, italy": {
+    "lat": 37.587794,
+    "lng": 14.155048
+  },
+  "servivo, palmela, portugal": {
+    "lat": null,
+    "lng": null
+  },
+  "palmela, portugal": {
+    "lat": 38.569601,
+    "lng": -8.9011653
+  },
+  "portugal": {
+    "lat": 39.6621648,
+    "lng": -8.1353519
   }
 }
