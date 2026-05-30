@@ -638,5 +638,17 @@
   "roussillon conflent, france": {
     "lat": 42.6413898,
     "lng": 2.610036
+  },
+  "brännö, sweden": {
+    "lat": 57.6437837,
+    "lng": 11.771809
+  },
+  "studio soma, berlin, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "nardó, puglia, italy": {
+    "lat": 40.1762608,
+    "lng": 18.0306371
   }
 }
