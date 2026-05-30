@@ -252,13 +252,17 @@ def airtable_existing_source_ids():
 
 
 def airtable_create(records):
-    """records: list of field dicts. Creates them in batches of 10."""
+    """records: list of field dicts. Creates them in batches of 10.
+    typecast=True lets Airtable auto-match select options and coerce types,
+    which avoids most 422 errors from small option name/case mismatches."""
     import requests
     created = 0
     for i in range(0, len(records), 10):
         batch = [{"fields": f} for f in records[i:i + 10]]
         r = requests.post(_airtable_url(), headers=airtable_headers(),
-                          json={"records": batch}, timeout=30)
+                          json={"records": batch, "typecast": True}, timeout=30)
+        if r.status_code >= 400:
+            print("  Airtable said:", r.status_code, r.text[:600])
         r.raise_for_status()
         created += len(r.json().get("records", []))
     return created
