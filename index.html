@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Otterotter — Contact Improvisation & Eco-Somatic Events Across Europe</title>
+  <meta name="description" content="An interactive map of contact improvisation and eco-somatic events, jams, workshops and communities across Europe." />
+
+  <!-- Expressive fonts: Fraunces (dreamy display) + Quicksand (soft body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet map library -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <svg class="logo-mark" width="74" height="60" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Otterotter — two playing otters">
+        <defs>
+          <linearGradient id="oCoral" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#f0a07f"/><stop offset="1" stop-color="#d2613f"/>
+          </linearGradient>
+          <linearGradient id="oMoss" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#9cbcaa"/><stop offset="1" stop-color="#4f7a62"/>
+          </linearGradient>
+        </defs>
+        <path d="M14 70 Q 40 58 60 70 T 106 70" fill="none" stroke="#bcd3c6" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+        <path d="M20 80 Q 46 70 66 80 T 104 78" fill="none" stroke="#cfe0d6" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+        <g>
+          <path d="M20 60 C 8 60 4 74 12 80 C 16 74 18 68 26 64 Z" fill="url(#oCoral)"/>
+          <path d="M30 26 C 16 30 14 50 24 62 C 32 72 48 70 52 58 C 46 56 40 50 40 42 C 40 34 44 30 50 30 C 44 25 36 24 30 26 Z" fill="url(#oCoral)"/>
+          <circle cx="48" cy="26" r="11" fill="url(#oCoral)"/>
+          <circle cx="41" cy="17" r="3.4" fill="url(#oCoral)"/>
+          <circle cx="53" cy="16" r="3.4" fill="url(#oCoral)"/>
+          <ellipse cx="51" cy="30" rx="5" ry="4" fill="#fff" opacity="0.9"/>
+          <circle cx="54.5" cy="30" r="1.5" fill="#3a2f28"/>
+          <circle cx="49" cy="24" r="1.7" fill="#3a2f28"/>
+        </g>
+        <g transform="translate(120,0) scale(-1,1)">
+          <path d="M20 60 C 8 60 4 74 12 80 C 16 74 18 68 26 64 Z" fill="url(#oMoss)"/>
+          <path d="M30 26 C 16 30 14 50 24 62 C 32 72 48 70 52 58 C 46 56 40 50 40 42 C 40 34 44 30 50 30 C 44 25 36 24 30 26 Z" fill="url(#oMoss)"/>
+          <circle cx="48" cy="26" r="11" fill="url(#oMoss)"/>
+          <circle cx="41" cy="17" r="3.4" fill="url(#oMoss)"/>
+          <circle cx="53" cy="16" r="3.4" fill="url(#oMoss)"/>
+          <ellipse cx="51" cy="30" rx="5" ry="4" fill="#fff" opacity="0.9"/>
+          <circle cx="54.5" cy="30" r="1.5" fill="#3a2f28"/>
+          <circle cx="49" cy="24" r="1.7" fill="#3a2f28"/>
+        </g>
+        <circle cx="60" cy="40" r="2.2" fill="#f6c9a8"/>
+        <circle cx="60" cy="48" r="1.4" fill="#b9a7d8"/>
+      </svg>
+      <div class="brand-text">
+        <h1>Otterotter</h1>
+        <p class="tagline">Contact improvisation &amp; eco-somatic gatherings across Europe</p>
+      </div>
+    </div>
+    <nav class="main-nav">
+      <a href="#map-section" class="nav-link active" data-view="events">Map &amp; Events</a>
+      <a href="#facilitators-section" class="nav-link" data-view="facilitators">Facilitators</a>
+      <a href="#contribute-section" class="nav-link" data-view="contribute">Contribute</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ============ EVENTS / MAP ============ -->
+    <section id="map-section" class="view view-events active-view">
+      <div class="events-hero">
+        <h2 class="events-hero-title">Find your next dance</h2>
+        <p class="events-hero-sub">Jams, classes, workshops, festivals &amp; retreats moving across Europe — follow the pins and go play.</p>
+      </div>
+      <div class="filters" role="region" aria-label="Filter events">
+        <span class="filters-prompt">Wander&hellip;</span>
+        <input type="search" id="search" class="filter-search" placeholder="Search events, cities, venues…" aria-label="Search events" />
+        <select id="filter-type" class="filter-select" aria-label="Filter by type">
+          <option value="">All types</option>
+          <option value="jam">Jams</option>
+          <option value="class">Classes</option>
+          <option value="workshop">Workshops</option>
+          <option value="festival">Festivals</option>
+          <option value="retreat">Retreats</option>
+        </select>
+        <select id="filter-country" class="filter-select" aria-label="Filter by country">
+          <option value="">All countries</option>
+        </select>
+        <select id="filter-month" class="filter-select" aria-label="Filter by month">
+          <option value="">Any month</option>
+        </select>
+        <label class="filter-check">
+          <input type="checkbox" id="filter-soon" /> Soon (next 14 days)
+        </label>
+        <span class="result-count" id="result-count"></span>
+      </div>
+
+      <div class="events-layout">
+        <div id="map" role="application" aria-label="Map of events"></div>
+        <aside class="event-list" id="event-list" aria-label="Event list">
+          <!-- event cards injected here -->
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============ FACILITATORS ============ -->
+    <section id="facilitators-section" class="view view-facilitators">
+      <div class="section-intro">
+        <h2>Facilitators</h2>
+        <p>People who teach and hold contact improvisation and eco-somatic practice across Europe. Want to be listed? Use the <a href="#contribute-section" data-view="contribute" class="inline-link">contribute form</a>.</p>
+      </div>
+      <div class="facilitator-grid" id="facilitator-grid"><!-- cards injected --></div>
+    </section>
+
+    <!-- ============ CONTRIBUTE ============ -->
+    <section id="contribute-section" class="view view-contribute">
+      <div class="section-intro">
+        <h2>Contribute</h2>
+        <p>Spotted a missing event, an error, or want to add yourself as a facilitator? Send it here — submissions are reviewed before they appear on the map.</p>
+      </div>
+
+      <!--
+        This form uses Formspree's free tier as a placeholder so it works with no backend.
+        Before launch: replace YOUR_FORM_ID with a real Formspree (or Netlify Forms) endpoint.
+        See README for the 2-minute setup.
+      -->
+      <form class="contribute-form" id="contribute-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+        <div class="form-row">
+          <label for="c-type">What is this?</label>
+          <select id="c-type" name="submission_type" required>
+            <option value="new-event">A new event / jam</option>
+            <option value="error">A correction / error report</option>
+            <option value="facilitator">Add me as a facilitator</option>
+            <option value="other">Something else</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="c-title">Title / subject</label>
+          <input type="text" id="c-title" name="title" placeholder="e.g. Weekly jam in Ghent" required />
+        </div>
+        <div class="form-row">
+          <label for="c-details">Details</label>
+          <textarea id="c-details" name="details" rows="5" placeholder="Date, time, city, venue, a link, and anything else useful…" required></textarea>
+        </div>
+        <div class="form-row">
+          <label for="c-email">Your email (so we can follow up)</label>
+          <input type="email" id="c-email" name="email" placeholder="you@example.com" required />
+        </div>
+        <button type="submit" class="btn-primary">Send submission</button>
+        <p class="form-note" id="form-note"></p>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Otterotter · a community map of contact improvisation &amp; eco-somatic practice · data is community-contributed and may contain errors</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

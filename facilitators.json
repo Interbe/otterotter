@@ -1,0 +1,32 @@
+{
+  "_comment": "Sample facilitator profiles for Otterotter. Edit freely. 'modalities' is a list of practice tags.",
+  "facilitators": [
+    {
+      "id": "sample-1",
+      "name": "Sample Facilitator One",
+      "bio_short": "Contact improvisation teacher with a background in contemporary dance. Teaches weekend workshops across the Nordics.",
+      "location": "Copenhagen, Denmark",
+      "modalities": ["Contact Improvisation", "Contemporary Dance"],
+      "website": "https://example.org/facilitator-one",
+      "photo": ""
+    },
+    {
+      "id": "sample-2",
+      "name": "Sample Facilitator Two",
+      "bio_short": "Eco-somatic practitioner working with Authentic Movement and nature-based embodiment retreats.",
+      "location": "Berlin, Germany",
+      "modalities": ["Authentic Movement", "Eco-Somatics", "Body-Mind Centering"],
+      "website": "https://example.org/facilitator-two",
+      "photo": ""
+    },
+    {
+      "id": "sample-3",
+      "name": "Sample Facilitator Three",
+      "bio_short": "Touring CI facilitator with European rotations; focuses on the Underscore and improvisational scores.",
+      "location": "Lisbon, Portugal",
+      "modalities": ["Contact Improvisation", "Improvisation Scores"],
+      "website": "https://example.org/facilitator-three",
+      "photo": ""
+    }
+  ]
+}
