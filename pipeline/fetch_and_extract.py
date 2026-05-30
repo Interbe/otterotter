@@ -77,6 +77,9 @@ def get_messages_live(state):
 
     out = []
     with TelegramClient(StringSession(session), api_id, api_hash) as client:
+        # Markdown mode keeps hidden hyperlinks inline as [text](url) so the AI
+        # can read the URLs (Telegram stores them outside the plain text).
+        client.parse_mode = "md"
         entity = client.get_entity(group)
         msgs = []
 
@@ -92,7 +95,8 @@ def get_messages_live(state):
             print("  Falling back to pinned messages ->", len(msgs))
 
         for msg in msgs:
-            text = msg.message or ""
+            # msg.text includes markdown links; fall back to raw message text
+            text = (getattr(msg, "text", None) or msg.message or "")
             if text.strip():
                 out.append({
                     "id": msg.id,

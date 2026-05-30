@@ -169,7 +169,9 @@ message date provided), or null
   city         city name or null
   country      country name in English or null
   venue        venue name or null
-  link         a URL if present, else null
+  link         the event's URL if present, else null. Links often appear as \
+markdown like [Festival Name](https://...) — put that URL here. Also accept plain \
+URLs. Pick the link that belongs to each specific event.
 
 Only include events in Europe. Be conservative: if you are not reasonably sure \
 something is a real, datable event, omit it."""
