@@ -1,13 +1,15 @@
 name: Otterotter Telegram pipeline
 
-# Runs automatically every 6 hours, and whenever you click "Run workflow".
 on:
   schedule:
     - cron: "0 */6 * * *"
   workflow_dispatch:
 
 permissions:
-  contents: write   # lets the job commit the updated events.json
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   run:
@@ -15,15 +17,12 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Install dependencies
         run: pip install -r pipeline/requirements.txt
-
       - name: Fetch new Telegram posts and extract events
         working-directory: pipeline
         env:
@@ -31,18 +30,17 @@ jobs:
           TG_API_HASH: ${{ secrets.TG_API_HASH }}
           TG_SESSION: ${{ secrets.TG_SESSION }}
           TG_GROUP: ${{ secrets.TG_GROUP }}
+          TG_TOPIC: ${{ secrets.TG_TOPIC }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           AIRTABLE_TOKEN: ${{ secrets.AIRTABLE_TOKEN }}
           AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
         run: python fetch_and_extract.py
-
       - name: Publish approved events to the map
         working-directory: pipeline
         env:
           AIRTABLE_TOKEN: ${{ secrets.AIRTABLE_TOKEN }}
           AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
         run: python sync_approved.py
-
       - name: Commit any updates
         run: |
           git config user.name "otterotter-bot"
