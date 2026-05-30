@@ -626,5 +626,17 @@
   "retie, belgium": {
     "lat": 51.2675862,
     "lng": 5.0843883
+  },
+  "putley, united kingdom": {
+    "lat": 52.0331174,
+    "lng": -2.5229909
+  },
+  "cheshire, united kingdom": {
+    "lat": 53.2141028,
+    "lng": -2.4717701
+  },
+  "roussillon conflent, france": {
+    "lat": 42.6413898,
+    "lng": 2.610036
   }
 }
