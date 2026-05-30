@@ -458,5 +458,173 @@
   "portugal": {
     "lat": 39.6621648,
     "lng": -8.1353519
+  },
+  "femminamorta, italy": {
+    "lat": 43.9688297,
+    "lng": 10.788525
+  },
+  "casa mirua, spain": {
+    "lat": null,
+    "lng": null
+  },
+  "spazio il mulino, italy": {
+    "lat": null,
+    "lng": null
+  },
+  "lugo, spain": {
+    "lat": 43.0395266,
+    "lng": -7.4567985
+  },
+  "sweden": {
+    "lat": 59.6749712,
+    "lng": 14.5208584
+  },
+  "ukraine": {
+    "lat": 49.4871968,
+    "lng": 31.2718321
+  },
+  "ytterjärna, sweden": {
+    "lat": 59.0757841,
+    "lng": 17.6177095
+  },
+  "piotrowice nyskie, poland": {
+    "lat": 50.4113244,
+    "lng": 17.1529222
+  },
+  "nijmegen, netherlands": {
+    "lat": 51.8474946,
+    "lng": 5.8637771
+  },
+  "bátonyterenye, hungary": {
+    "lat": 47.9955532,
+    "lng": 19.8272105
+  },
+  "valencia, spain": {
+    "lat": 39.4697065,
+    "lng": -0.3763353
+  },
+  "liveloula, greece": {
+    "lat": 38.4603181,
+    "lng": 20.5764373
+  },
+  "plouguerneau, france": {
+    "lat": 48.6063358,
+    "lng": -4.506818
+  },
+  "il mulino, italy": {
+    "lat": 43.2812488,
+    "lng": 11.9688427
+  },
+  "llanes, spain": {
+    "lat": 43.4211205,
+    "lng": -4.7530835
+  },
+  "casina settarte, italy": {
+    "lat": null,
+    "lng": null
+  },
+  "bern, switzerland": {
+    "lat": 46.9484742,
+    "lng": 7.4521749
+  },
+  "puszcza, poland": {
+    "lat": 51.295572,
+    "lng": 19.158345
+  },
+  "beech hill, cheshire, united kingdom": {
+    "lat": 53.3126758,
+    "lng": -2.3196625
+  },
+  "rovinj, croatia": {
+    "lat": 45.0807411,
+    "lng": 13.6417282
+  },
+  "lyon, france": {
+    "lat": 45.7578137,
+    "lng": 4.8320114
+  },
+  "stuttgart, germany": {
+    "lat": 48.7784485,
+    "lng": 9.1800132
+  },
+  "larret en mouvement, france": {
+    "lat": null,
+    "lng": null
+  },
+  "turku, finland": {
+    "lat": 60.4515932,
+    "lng": 22.2669991
+  },
+  "crailsheim, germany": {
+    "lat": 49.1365626,
+    "lng": 10.0720195
+  },
+  "lučenec, slovakia": {
+    "lat": 48.3303886,
+    "lng": 19.6634149
+  },
+  "nordmarka, norway": {
+    "lat": 59.777477,
+    "lng": 10.3313327
+  },
+  "lublin, poland": {
+    "lat": 51.2181945,
+    "lng": 22.5546776
+  },
+  "hof ruckhardtshausen, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "trstenice, czech republic": {
+    "lat": 48.9882474,
+    "lng": 16.1977922
+  },
+  "stockholm, sweden": {
+    "lat": 59.3251172,
+    "lng": 18.0710935
+  },
+  "ancona, italy": {
+    "lat": 43.4801189,
+    "lng": 13.2187279
+  },
+  "gaia terra, italy": {
+    "lat": 45.893317,
+    "lng": 13.0601951
+  },
+  "dresden, germany": {
+    "lat": 51.0493286,
+    "lng": 13.7381437
+  },
+  "quinta ten chi, portugal": {
+    "lat": null,
+    "lng": null
+  },
+  "glarisegg, switzerland": {
+    "lat": 47.6557958,
+    "lng": 8.959995
+  },
+  "dordogne, france": {
+    "lat": 45.1429199,
+    "lng": 0.6321258
+  },
+  "aegina island, greece": {
+    "lat": 37.7243694,
+    "lng": 23.4938109
+  },
+  "frome, united kingdom": {
+    "lat": 51.2294852,
+    "lng": -2.3198467
+  },
+  "nardó, italy": {
+    "lat": 40.1762608,
+    "lng": 18.0306371
+  },
+  "studio burdąg, poland": {
+    "lat": 53.5586519,
+    "lng": 20.7628036
+  },
+  "retie, belgium": {
+    "lat": 51.2675862,
+    "lng": 5.0843883
   }
 }
