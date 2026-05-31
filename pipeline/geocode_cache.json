@@ -886,5 +886,9 @@
   "switzerland": {
     "lat": 46.7985624,
     "lng": 8.2319736
+  },
+  "salt spring, canada": {
+    "lat": 48.8296672,
+    "lng": -123.5151614
   }
 }
