@@ -866,5 +866,17 @@
   "montevideo, uruguay": {
     "lat": -34.9058916,
     "lng": -56.1913095
+  },
+  "breitenbush, portland, united states": {
+    "lat": null,
+    "lng": null
+  },
+  "playa del fuego, tamaqua, united states": {
+    "lat": null,
+    "lng": null
+  },
+  "studio burdąg, warsaw, poland": {
+    "lat": null,
+    "lng": null
   }
 }
