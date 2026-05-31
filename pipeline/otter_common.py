@@ -85,6 +85,30 @@ def event_id(ev):
 
 
 # ---------------------------------------------------------------- events.json I/O
+def norm_link(url):
+    """Normalise a URL for comparison: drop scheme, www, query, trailing slash."""
+    if not url:
+        return ""
+    u = str(url).strip().lower()
+    u = re.sub(r"^https?://", "", u)
+    u = re.sub(r"^www\.", "", u)
+    u = u.split("?")[0].split("#")[0].rstrip("/")
+    return u
+
+
+def dedupe_key(ev):
+    """A stable identity for an event. Prefer the link (stable across runs);
+    fall back to title+date+city when there's no link."""
+    link = norm_link(ev.get("link"))
+    if link:
+        return "link:" + link
+    return "id:" + event_id(ev)
+
+
+def existing_dedupe_keys(events_data):
+    return {dedupe_key(e) for e in events_data.get("events", [])}
+
+
 def load_events():
     data = load_json(EVENTS_PATH, {"events": []})
     if "events" not in data:
@@ -306,12 +330,12 @@ def airtable_preflight():
 
 
 def airtable_existing_event_keys():
-    """Return the set of event_id keys already in Airtable (any status), computed
-    from Title + StartDate + City, so we can dedupe by content (not just message)."""
+    """Return dedupe keys for every row already in Airtable (any status), preferring
+    the event link so the same event isn't re-added when the AI rephrases its title."""
     import requests
     keys, offset = set(), None
     while True:
-        params = {"fields[]": ["Title", "StartDate", "City"], "pageSize": 100}
+        params = {"fields[]": ["Title", "StartDate", "City", "Link"], "pageSize": 100}
         if offset:
             params["offset"] = offset
         r = requests.get(_airtable_url(), headers=airtable_headers(), params=params, timeout=30)
@@ -319,15 +343,72 @@ def airtable_existing_event_keys():
         data = r.json()
         for rec in data.get("records", []):
             f = rec.get("fields", {})
-            keys.add(event_id({
+            keys.add(dedupe_key({
                 "title": f.get("Title", ""),
                 "start_date": f.get("StartDate", ""),
                 "city": f.get("City", ""),
+                "link": f.get("Link", ""),
             }))
         offset = data.get("offset")
         if not offset:
             break
     return keys
+
+
+STATUS_RANK = {"Published": 3, "Approved": 2, "Pending": 1, "Rejected": 0}
+
+
+def _dedupe_plan(rows):
+    """Given Airtable rows, decide which to keep (one per dedupe key, highest
+    status wins) and which record ids to delete. Pure function — easy to test."""
+    best, delete = {}, []
+    for rec in rows:
+        f = rec.get("fields", {})
+        key = dedupe_key({
+            "title": f.get("Title", ""), "start_date": f.get("StartDate", ""),
+            "city": f.get("City", ""), "link": f.get("Link", ""),
+        })
+        if key not in best:
+            best[key] = rec
+            continue
+        cur = best[key]
+        keep_new = STATUS_RANK.get(f.get("Status"), 0) > \
+            STATUS_RANK.get(cur.get("fields", {}).get("Status"), 0)
+        if keep_new:
+            delete.append(cur["id"])
+            best[key] = rec
+        else:
+            delete.append(rec["id"])
+    return list(best.values()), delete
+
+
+def airtable_delete(ids):
+    import requests
+    for i in range(0, len(ids), 10):
+        chunk = ids[i:i + 10]
+        r = requests.delete(_airtable_url(), headers=airtable_headers(),
+                            params=[("records[]", rid) for rid in chunk], timeout=30)
+        r.raise_for_status()
+
+
+def airtable_dedupe():
+    """Collapse duplicate rows already in Airtable. Returns number deleted."""
+    import requests
+    rows, offset = [], None
+    while True:
+        params = {"fields[]": ["Title", "StartDate", "City", "Link", "Status"], "pageSize": 100}
+        if offset:
+            params["offset"] = offset
+        r = requests.get(_airtable_url(), headers=airtable_headers(), params=params, timeout=30)
+        r.raise_for_status()
+        data = r.json()
+        rows.extend(data.get("records", []))
+        offset = data.get("offset")
+        if not offset:
+            break
+    _keep, delete_ids = _dedupe_plan(rows)
+    airtable_delete(delete_ids)
+    return len(delete_ids)
 
 
 def airtable_create(records):

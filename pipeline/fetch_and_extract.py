@@ -113,12 +113,14 @@ def main():
     if DRY:
         print("DRY RUN — no network calls\n")
         messages = get_messages_dry()
-        existing_keys = oc.existing_ids(oc.load_events())
+        existing_keys = oc.existing_dedupe_keys(oc.load_events())
         extractor = mock_extract
     else:
         oc.airtable_preflight()  # fail fast (~1s) if token/base/table are wrong
+        removed = oc.airtable_dedupe()  # collapse any existing duplicate rows
+        print("Removed", removed, "duplicate rows from Airtable")
         messages = get_messages_live(state)
-        existing_keys = oc.airtable_existing_event_keys() | oc.existing_ids(oc.load_events())
+        existing_keys = oc.airtable_existing_event_keys() | oc.existing_dedupe_keys(oc.load_events())
         from anthropic import Anthropic
         client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
         extractor = lambda text, date: oc.extract_events_claude(text, date, client)
@@ -133,7 +135,7 @@ def main():
         print("  msg", src, "->", len(events), "events extracted")
         for ev in events:
             oc.geocode_event(ev, cache, online=not DRY, mock_table=MOCK_GEO)
-            key = oc.event_id(ev)
+            key = oc.dedupe_key(ev)
             if key in existing_keys or key in seen:
                 continue  # already on the map, already in Airtable, or a repeat this run
             seen.add(key)
