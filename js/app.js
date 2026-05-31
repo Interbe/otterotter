@@ -313,15 +313,23 @@
     var note = document.getElementById("form-note");
     if (!form) return;
     form.addEventListener("submit", function (e) {
-      // If the Formspree endpoint isn't configured yet, intercept and explain.
-      if (form.getAttribute("action").indexOf("YOUR_FORM_ID") !== -1) {
-        e.preventDefault();
+      e.preventDefault();
+      note.style.color = "";
+      note.textContent = "Sending…";
+      var body = new URLSearchParams(new FormData(form)).toString();
+      fetch("/", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: body
+      }).then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        form.reset();
+        note.style.color = "var(--moss)";
+        note.textContent = "Thank you! Your submission was received — we review everything before it appears on the map.";
+      }).catch(function () {
         note.style.color = "#b4521f";
-        note.textContent = "Form not connected yet — see README to add a free Formspree/Netlify endpoint. Your details were not sent.";
-      } else {
-        note.style.color = "";
-        note.textContent = "Sending…";
-      }
+        note.textContent = "Hmm, that didn't send. Please try again, or email us.";
+      });
     });
   }
 

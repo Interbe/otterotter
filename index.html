@@ -121,12 +121,12 @@
         <p>Spotted a missing event, an error, or want to add yourself as a facilitator? Send it here — submissions are reviewed before they appear on the map.</p>
       </div>
 
-      <!--
-        This form uses Formspree's free tier as a placeholder so it works with no backend.
-        Before launch: replace YOUR_FORM_ID with a real Formspree (or Netlify Forms) endpoint.
-        See README for the 2-minute setup.
-      -->
-      <form class="contribute-form" id="contribute-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+      <!-- Netlify Forms: detected automatically at deploy because this form is
+           in the static HTML. Submissions appear under Forms in the Netlify dashboard. -->
+      <form class="contribute-form" id="contribute-form" name="contribute" method="POST"
+            data-netlify="true" netlify-honeypot="bot-field" action="/">
+        <input type="hidden" name="form-name" value="contribute" />
+        <p class="hp-field"><label>Leave this empty: <input name="bot-field" /></label></p>
         <div class="form-row">
           <label for="c-type">What is this?</label>
           <select id="c-type" name="submission_type" required>
