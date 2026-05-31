@@ -85,6 +85,13 @@ def event_id(ev):
 
 
 # ---------------------------------------------------------------- events.json I/O
+def is_past(ev):
+    """True if the event's end (or start) date is before today. Unknown dates are
+    treated as NOT past (kept), so we never silently drop undated events here."""
+    d = clean_date(ev.get("end_date")) or clean_date(ev.get("start_date"))
+    return bool(d) and d < today_iso()
+
+
 def norm_link(url):
     """Normalise a URL for comparison: drop scheme, www, query, trailing slash."""
     if not url:
@@ -409,6 +416,33 @@ def airtable_dedupe():
     _keep, delete_ids = _dedupe_plan(rows)
     airtable_delete(delete_ids)
     return len(delete_ids)
+
+
+def airtable_purge_past():
+    """Delete past, not-yet-published rows from Airtable to keep the queue clean.
+    Published rows are left alone (the live map already hides past events)."""
+    import requests
+    rows, offset = [], None
+    while True:
+        params = {"fields[]": ["StartDate", "EndDate", "Status"], "pageSize": 100}
+        if offset:
+            params["offset"] = offset
+        r = requests.get(_airtable_url(), headers=airtable_headers(), params=params, timeout=30)
+        r.raise_for_status()
+        data = r.json()
+        rows.extend(data.get("records", []))
+        offset = data.get("offset")
+        if not offset:
+            break
+    delete = []
+    for rec in rows:
+        f = rec.get("fields", {})
+        if f.get("Status") == "Published":
+            continue
+        if is_past({"start_date": f.get("StartDate"), "end_date": f.get("EndDate")}):
+            delete.append(rec["id"])
+    airtable_delete(delete)
+    return len(delete)
 
 
 def airtable_create(records):

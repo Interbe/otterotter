@@ -119,6 +119,8 @@ def main():
         oc.airtable_preflight()  # fail fast (~1s) if token/base/table are wrong
         removed = oc.airtable_dedupe()  # collapse any existing duplicate rows
         print("Removed", removed, "duplicate rows from Airtable")
+        purged = oc.airtable_purge_past()  # drop past, not-yet-published rows
+        print("Removed", purged, "past rows from Airtable")
         messages = get_messages_live(state)
         existing_keys = oc.airtable_existing_event_keys() | oc.existing_dedupe_keys(oc.load_events())
         from anthropic import Anthropic
@@ -134,6 +136,8 @@ def main():
         events = extractor(m["text"], m.get("date", oc.today_iso()))
         print("  msg", src, "->", len(events), "events extracted")
         for ev in events:
+            if oc.is_past(ev):
+                continue  # skip events that have already happened
             oc.geocode_event(ev, cache, online=not DRY, mock_table=MOCK_GEO)
             key = oc.dedupe_key(ev)
             if key in existing_keys or key in seen:
