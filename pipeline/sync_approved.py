@@ -32,6 +32,8 @@ def _consider(rec, events_data, existing_keys, label):
     if not ev.get("start_date"):
         print("  ! skipping (no date):", ev.get("title"))
         return False
+    if oc.is_past(ev):
+        return False  # don't (re)publish events that have already happened
     if ev.get("lat") is None or ev.get("lng") is None:
         print("  ! skipping (no coordinates):", ev.get("title"))
         return False
