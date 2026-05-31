@@ -1,0 +1,13 @@
+# Netlify configuration for Otterotter
+#
+# Static site — no build step. The "ignore" command below tells Netlify to SKIP a
+# deploy unless one of the real site files changed. The Telegram pipeline often
+# commits only its bookkeeping (pipeline/state.json, geocode_cache.json); those
+# commits no longer trigger a deploy, which saves credits.
+#
+# How "ignore" works: exit 0 = skip the build, exit 1 = build.
+# `git diff --quiet ... -- <paths>` exits 0 when those paths are unchanged.
+
+[build]
+  publish = "."
+  ignore = "git diff --quiet HEAD^ HEAD -- index.html css js data"
