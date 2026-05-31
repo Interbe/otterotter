@@ -890,5 +890,9 @@
   "salt spring, canada": {
     "lat": 48.8296672,
     "lng": -123.5151614
+  },
+  "valle sagrado, peru": {
+    "lat": -13.3593912,
+    "lng": -72.0152012
   }
 }
