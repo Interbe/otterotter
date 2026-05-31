@@ -85,7 +85,8 @@
 
   // ---- Map ----
   function initMap() {
-    map = L.map("map", { scrollWheelZoom: true, worldCopyJump: true }).setView([25, 5], 2);
+    map = L.map("map", { scrollWheelZoom: true, worldCopyJump: true }).setView([52, 12], 4);
+    // Opens focused on Europe; international events are still on the map when you zoom out.
 
     // Painterly Stamen Watercolor basemap (hosted by Stadia Maps).
     // Works key-free on localhost; for production add your domain in the free
@@ -305,6 +306,22 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
       });
     });
+
+    // Clicking the logo / title returns to the landing state (like a refresh).
+    var brand = document.querySelector(".brand");
+    if (brand) {
+      brand.addEventListener("click", function (e) {
+        e.preventDefault();
+        ["search", "filter-type", "filter-country", "filter-month"].forEach(function (id) {
+          document.getElementById(id).value = "";
+        });
+        document.getElementById("filter-soon").checked = false;
+        applyFilters();
+        showView("events");
+        if (map) map.setView([52, 12], 4);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
   }
 
   // ---- Contribute form ----

@@ -101,7 +101,8 @@ body::after {
   background-size: 24px 8px; opacity: 0.5; pointer-events: none;
 }
 
-.brand { display: flex; align-items: center; gap: 14px; }
+.brand { display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit; cursor: pointer; }
+.brand:hover { text-decoration: none; }
 .logo-mark {
   display: block; flex: none;
   transform-origin: 50% 80%;
