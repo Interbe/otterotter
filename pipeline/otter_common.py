@@ -55,6 +55,19 @@ def save_json(path, data):
         f.write("\n")
 
 
+def clean_date(s):
+    """Return s if it's a real YYYY-MM-DD date, else None (guards against the model
+    hallucinating impossible dates like 2026-09-31)."""
+    if not s:
+        return None
+    s = str(s)[:10]
+    try:
+        dt.datetime.strptime(s, "%Y-%m-%d")
+        return s
+    except ValueError:
+        return None
+
+
 def slugify(*parts):
     base = "-".join(str(p) for p in parts if p)
     base = base.lower()
@@ -173,8 +186,8 @@ message date provided), or null
 markdown like [Festival Name](https://...) — put that URL here. Also accept plain \
 URLs. Pick the link that belongs to each specific event.
 
-Only include events in Europe. Be conservative: if you are not reasonably sure \
-something is a real, datable event, omit it."""
+Events may be anywhere in the world. Be conservative: if you are not reasonably \
+sure something is a real, datable event, omit it."""
 
 
 def extract_events_claude(message_text, message_date, client):
@@ -322,15 +335,28 @@ def airtable_create(records):
     typecast=True lets Airtable auto-match select options and coerce types,
     which avoids most 422 errors from small option name/case mismatches."""
     import requests
+
+    def _post(field_dicts):
+        return requests.post(
+            _airtable_url(), headers=airtable_headers(),
+            json={"records": [{"fields": f} for f in field_dicts], "typecast": True},
+            timeout=30)
+
     created = 0
     for i in range(0, len(records), 10):
-        batch = [{"fields": f} for f in records[i:i + 10]]
-        r = requests.post(_airtable_url(), headers=airtable_headers(),
-                          json={"records": batch, "typecast": True}, timeout=30)
-        if r.status_code >= 400:
-            print("  Airtable said:", r.status_code, r.text[:600])
-        r.raise_for_status()
-        created += len(r.json().get("records", []))
+        chunk = records[i:i + 10]
+        r = _post(chunk)
+        if r.status_code < 400:
+            created += len(r.json().get("records", []))
+            continue
+        # one bad row fails the whole batch — retry individually and skip offenders
+        print("  batch failed (", r.status_code, ") — retrying rows individually")
+        for f in chunk:
+            r1 = _post([f])
+            if r1.status_code < 400:
+                created += 1
+            else:
+                print("  skipped row:", f.get("Title"), "->", r1.text[:160])
     return created
 
 
@@ -371,8 +397,8 @@ def candidate_to_airtable_fields(ev, source_msg):
         "Title": ev.get("title") or "",
         "Description": ev.get("description") or "",
         "Type": ev.get("type") or "jam",
-        "StartDate": ev.get("start_date") or None,
-        "EndDate": ev.get("end_date") or ev.get("start_date") or None,
+        "StartDate": clean_date(ev.get("start_date")),
+        "EndDate": clean_date(ev.get("end_date")) or clean_date(ev.get("start_date")),
         "Time": ev.get("time") or "",
         "City": ev.get("city") or "",
         "Country": ev.get("country") or "",
@@ -392,8 +418,8 @@ def airtable_record_to_event(fields):
         "title": fields.get("Title", ""),
         "description": fields.get("Description", ""),
         "type": fields.get("Type", "jam"),
-        "start_date": fields.get("StartDate"),
-        "end_date": fields.get("EndDate") or fields.get("StartDate"),
+        "start_date": clean_date(fields.get("StartDate")),
+        "end_date": clean_date(fields.get("EndDate")) or clean_date(fields.get("StartDate")),
         "time": fields.get("Time", ""),
         "city": fields.get("City", ""),
         "country": fields.get("Country", ""),
