@@ -256,6 +256,51 @@
     });
   }
 
+  // ---- "Happening soon" strip ----
+  function focusEvent(ev) {
+    if (typeof ev.lat !== "number" || typeof ev.lng !== "number") return;
+    map.setView([ev.lat, ev.lng], 8, { animate: true });
+    var m = markersById[ev.id];
+    if (m) {
+      clusterGroup.zoomToShowLayer(m, function () { m.openPopup(); });
+    }
+  }
+
+  function renderSoonStrip() {
+    var wrap = document.getElementById("soon-wrap");
+    var strip = document.getElementById("soon-strip");
+    if (!wrap || !strip) return;
+    var upcoming = allEvents.filter(function (e) { return !isPast(e); });
+    upcoming.sort(function (a, b) { return daysUntil(a.start_date) - daysUntil(b.start_date); });
+    var soon = upcoming.slice(0, 8);
+    if (!soon.length) { wrap.hidden = true; return; }
+    wrap.hidden = false;
+
+    strip.innerHTML = soon.map(function (ev) {
+      var du = daysUntil(ev.start_date);
+      var when = du <= 0 ? "Today" : (du === 1 ? "Tomorrow" : "in " + du + " days");
+      return (
+        '<button class="soon-card" data-id="' + escapeHtml(ev.id) + '" type="button">' +
+        '<span class="soon-when">' + escapeHtml(when) + "</span>" +
+        '<span class="soon-name">' + escapeHtml(ev.title) + "</span>" +
+        '<span class="soon-place">' + escapeHtml(ev.city) + ", " + escapeHtml(ev.country) + "</span>" +
+        '<span class="badge type">' + escapeHtml(TYPE_LABELS[ev.type] || ev.type) + "</span>" +
+        "</button>"
+      );
+    }).join("");
+
+    Array.prototype.forEach.call(strip.querySelectorAll(".soon-card"), function (card) {
+      card.addEventListener("click", function () {
+        var ev = allEvents.filter(function (e) { return e.id === card.getAttribute("data-id"); })[0];
+        if (ev) {
+          showView("events");
+          focusEvent(ev);
+          document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      });
+    });
+  }
+
   // ---- Facilitators ----
   function renderFacilitators(list) {
     var grid = document.getElementById("facilitator-grid");
@@ -269,9 +314,13 @@
       var mods = (f.modalities || []).map(function (m) {
         return '<span class="badge">' + escapeHtml(m) + "</span>";
       }).join("");
+      var avatar = f.photo
+        ? '<img class="avatar avatar-img" src="' + escapeHtml(f.photo) +
+          '" alt="' + escapeHtml(f.name) + '" loading="lazy" />'
+        : '<div class="avatar">' + escapeHtml(initials) + "</div>";
       return (
         '<article class="facilitator-card">' +
-        '<div class="avatar">' + escapeHtml(initials) + "</div>" +
+        avatar +
         "<h3>" + escapeHtml(f.name) + "</h3>" +
         '<p class="loc">' + escapeHtml(f.location || "") + "</p>" +
         '<p class="bio">' + escapeHtml(f.bio_short || "") + "</p>" +
@@ -378,6 +427,7 @@
         populateCountryFilter();
         populateMonthFilter();
         applyFilters();
+        renderSoonStrip();
       })
       .catch(function (err) {
         document.getElementById("event-list").innerHTML =
