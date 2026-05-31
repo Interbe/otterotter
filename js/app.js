@@ -270,7 +270,9 @@
     var wrap = document.getElementById("soon-wrap");
     var strip = document.getElementById("soon-strip");
     if (!wrap || !strip) return;
-    var upcoming = allEvents.filter(function (e) { return !isPast(e); });
+    // only events that haven't started yet (already-started ones stay on the map,
+    // but it's odd to headline them as "happening soon")
+    var upcoming = allEvents.filter(function (e) { return daysUntil(e.start_date) >= 0; });
     upcoming.sort(function (a, b) { return daysUntil(a.start_date) - daysUntil(b.start_date); });
     var soon = upcoming.slice(0, 8);
     if (!soon.length) { wrap.hidden = true; return; }
@@ -308,6 +310,9 @@
       grid.innerHTML = '<div class="empty-state">No facilitators listed yet.</div>';
       return;
     }
+    list = list.slice().sort(function (a, b) {
+      return (a.name || "").localeCompare(b.name || "");
+    });
     grid.innerHTML = list.map(function (f) {
       var initials = (f.name || "?").split(/\s+/).map(function (w) { return w[0]; })
         .slice(0, 2).join("").toUpperCase();
