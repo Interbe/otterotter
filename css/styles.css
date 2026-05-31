@@ -130,6 +130,7 @@ body::after {
   font-size: clamp(20px, 2.6vw, 26px); line-height: 1.1; color: var(--forest);
 }
 .events-hero-title::first-letter { color: var(--terra); }
+.events-hero-sub { margin: 5px 0 0; color: var(--muted); font-size: 14px; max-width: 620px; }
 
 .main-nav { display: flex; gap: 8px; flex-wrap: wrap; }
 .nav-link {
@@ -373,6 +374,8 @@ body::after {
   padding: 26px; text-align: center; color: var(--muted); font-size: 12.5px;
   border-top: 1px solid var(--line); background: rgba(251,246,238,0.5);
 }
+.site-footer p { margin: 0 0 6px; }
+.footer-fine { font-size: 11.5px; opacity: 0.85; max-width: 720px; margin: 0 auto; line-height: 1.5; }
 
 /* ---------- Empty state ---------- */
 .empty-state { padding: 36px 16px; text-align: center; color: var(--muted); font-size: 14.5px; font-style: italic; }
