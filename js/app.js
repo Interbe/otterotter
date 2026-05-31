@@ -85,7 +85,7 @@
 
   // ---- Map ----
   function initMap() {
-    map = L.map("map", { scrollWheelZoom: true }).setView([52.0, 12.0], 4);
+    map = L.map("map", { scrollWheelZoom: true, worldCopyJump: true }).setView([25, 5], 2);
 
     // Painterly Stamen Watercolor basemap (hosted by Stadia Maps).
     // Works key-free on localhost; for production add your domain in the free
