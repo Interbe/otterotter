@@ -650,5 +650,221 @@
   "nardó, puglia, italy": {
     "lat": 40.1762608,
     "lng": 18.0306371
+  },
+  "lennox head, australia": {
+    "lat": -28.7910334,
+    "lng": 153.5878047
+  },
+  "vashon island, united states": {
+    "lat": 47.4208759,
+    "lng": -122.4737053
+  },
+  "north fork, united states": {
+    "lat": 33.9784715,
+    "lng": -109.9409419
+  },
+  "charles town, united states": {
+    "lat": 39.2891836,
+    "lng": -77.859581
+  },
+  "earthdance, united states": {
+    "lat": null,
+    "lng": null
+  },
+  "united states": {
+    "lat": 39.7837304,
+    "lng": -100.445882
+  },
+  "chiang dao, thailand": {
+    "lat": 19.3695656,
+    "lng": 98.9657112
+  },
+  "valle sagrado de los incas, peru": {
+    "lat": -13.3593912,
+    "lng": -72.0152012
+  },
+  "victoria, canada": {
+    "lat": 48.4283182,
+    "lng": -123.364953
+  },
+  "berkeley, united states": {
+    "lat": 37.8708393,
+    "lng": -122.272863
+  },
+  "hualien, taiwan": {
+    "lat": 23.9913421,
+    "lng": 121.6197276
+  },
+  "san juan islands, united states": {
+    "lat": 48.537089,
+    "lng": -123.0907204
+  },
+  "salt spring island, canada": {
+    "lat": 48.8296672,
+    "lng": -123.5151614
+  },
+  "busan, south korea": {
+    "lat": 35.1799528,
+    "lng": 129.0752365
+  },
+  "hof ruckhardtshausen, hof, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "hof, germany": {
+    "lat": 50.3187507,
+    "lng": 11.9162992
+  },
+  "koh chang, thailand": {
+    "lat": 12.0546168,
+    "lng": 102.3373426
+  },
+  "portland, united states": {
+    "lat": 45.5202471,
+    "lng": -122.674194
+  },
+  "gran canaria, spain": {
+    "lat": 27.9580004,
+    "lng": -15.6062305
+  },
+  "koh phangan, thailand": {
+    "lat": 9.7349503,
+    "lng": 100.0305711
+  },
+  "kagoshima, japan": {
+    "lat": 31.521587,
+    "lng": 130.5474077
+  },
+  "algodonales, spain": {
+    "lat": 36.879693,
+    "lng": -5.4047755
+  },
+  "buenos aires, argentina": {
+    "lat": -34.6095579,
+    "lng": -58.3887904
+  },
+  "linares, chile": {
+    "lat": -35.8452905,
+    "lng": -71.5977173
+  },
+  "bogotá, colombia": {
+    "lat": 4.6533817,
+    "lng": -74.0836331
+  },
+  "bacalar, mexico": {
+    "lat": 18.9407916,
+    "lng": -88.6164282
+  },
+  "dali, china": {
+    "lat": 25.6074778,
+    "lng": 100.2651597
+  },
+  "seoul, south korea": {
+    "lat": 37.5666791,
+    "lng": 126.9782914
+  },
+  "misiones, argentina": {
+    "lat": -26.737224,
+    "lng": -54.4315257
+  },
+  "nishiawakura, japan": {
+    "lat": 35.171453,
+    "lng": 134.3365858
+  },
+  "tokyo, japan": {
+    "lat": 35.6768601,
+    "lng": 139.7638947
+  },
+  "bali, indonesia": {
+    "lat": -8.2271303,
+    "lng": 115.1919203
+  },
+  "dharamkot, india": {
+    "lat": 30.9432095,
+    "lng": 75.2327764
+  },
+  "quinta fonte dos passos, portugal": {
+    "lat": null,
+    "lng": null
+  },
+  "catania, italy": {
+    "lat": 37.5023612,
+    "lng": 15.0873718
+  },
+  "qingshan village, china": {
+    "lat": 31.9519657,
+    "lng": 116.8901679
+  },
+  "estúdio yucca, portugal": {
+    "lat": null,
+    "lng": null
+  },
+  "tamaqua, united states": {
+    "lat": 40.7974296,
+    "lng": -75.9696186
+  },
+  "chapadmalal, argentina": {
+    "lat": -38.1944082,
+    "lng": -57.6802111
+  },
+  "chalmita, mexico": {
+    "lat": 18.9347433,
+    "lng": -99.4246414
+  },
+  "oderberg, germany": {
+    "lat": 52.865906,
+    "lng": 14.0450286
+  },
+  "bad schandau, germany": {
+    "lat": 50.9247388,
+    "lng": 14.2153046
+  },
+  "meerle, belgium": {
+    "lat": 51.4743516,
+    "lng": 4.8051679
+  },
+  "berne, switzerland": {
+    "lat": 46.9484742,
+    "lng": 7.4521749
+  },
+  "wildheart center, united states": {
+    "lat": null,
+    "lng": null
+  },
+  "montréal, canada": {
+    "lat": 45.5031824,
+    "lng": -73.5698065
+  },
+  "aztec, united states": {
+    "lat": 36.8220629,
+    "lng": -107.992899
+  },
+  "lasqueti island, canada": {
+    "lat": 49.4822336,
+    "lng": -124.2827594
+  },
+  "kuala lumpur, malaysia": {
+    "lat": 3.1516964,
+    "lng": 101.6942371
+  },
+  "montecito, argentina": {
+    "lat": -24.813813,
+    "lng": -65.479159
+  },
+  "roelands village, australia": {
+    "lat": -33.3202495,
+    "lng": 115.8812647
+  },
+  "kunming, china": {
+    "lat": 25.0399353,
+    "lng": 102.7169061
+  },
+  "villa de leyva, colombia": {
+    "lat": 5.6619877,
+    "lng": -73.5283801
+  },
+  "montevideo, uruguay": {
+    "lat": -34.9058916,
+    "lng": -56.1913095
   }
 }
