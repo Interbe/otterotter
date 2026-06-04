@@ -2142,6 +2142,24 @@
       "featured": false,
       "added_date": "2026-05-31",
       "id": "fly-like-a-bird-land-like-a-cat-2026-08-26-amsterdam-1c1293"
+    },
+    {
+      "title": "Uberört",
+      "description": "Celebration of movement and community",
+      "type": "festival",
+      "start_date": "2026-07-01",
+      "end_date": "2026-07-05",
+      "time": "",
+      "city": "Åseda",
+      "country": "Sweden",
+      "venue": "Möllan Retreat",
+      "lat": 57.2,
+      "lng": 15.5,
+      "link": "https://rort.dk/festival/",
+      "source": "telegram",
+      "featured": false,
+      "added_date": "2026-06-04",
+      "id": "uber-rt-2026-07-01-seda-72e2c9"
     }
   ]
 }
