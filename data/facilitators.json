@@ -27,15 +27,6 @@
       "modalities": ["Contact Improvisation"],
       "website": "",
       "photo": "assets/facilitators/maja-ejrnaes.jpg"
-    },
-    {
-      "id": "maxime-kroot",
-      "name": "Maxime Kroot",
-      "bio_short": "Curious, multidisciplinary dancer, performer and teacher. Her playful practice tunes into the body's micro and macro movements and the unfolding connection between dancers.",
-      "location": "",
-      "modalities": ["Contact Improvisation"],
-      "website": "",
-      "photo": "assets/facilitators/maxime-kroot.jpg"
     }
   ]
 }
