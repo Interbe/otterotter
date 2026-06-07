@@ -902,5 +902,21 @@
   "starzyna, poland": {
     "lat": 52.5874106,
     "lng": 23.534192
+  },
+  "beauty is in the eye of the beholder, norway": {
+    "lat": null,
+    "lng": null
+  },
+  "möllan retreat, åseda, sweden": {
+    "lat": null,
+    "lng": null
+  },
+  "åseda, sweden": {
+    "lat": 57.1693551,
+    "lng": 15.3523648
+  },
+  "brännö sommarjam, sweden": {
+    "lat": null,
+    "lng": null
   }
 }
