@@ -116,6 +116,35 @@ def existing_dedupe_keys(events_data):
     return {dedupe_key(e) for e in events_data.get("events", [])}
 
 
+# ---------------------------------------------------------------- manual location overrides
+OVERRIDES_PATH = os.path.join(HERE, "location_overrides.json")
+
+
+def load_overrides():
+    """Manual location corrections from the review tool. Shape:
+    {"overrides": {"<event link or id:...>": {"lat":.., "lng":..} | {"unlocated": true}}}"""
+    data = load_json(OVERRIDES_PATH, {})
+    return data.get("overrides", {}) if isinstance(data, dict) else {}
+
+
+def override_key(ev):
+    link = norm_link(ev.get("link"))
+    return link if link else ("id:" + str(ev.get("id") or event_id(ev)))
+
+
+def apply_override(ev, overrides):
+    """If a manual override exists for this event, apply it (it always wins over
+    geocoding). Returns True if one was applied."""
+    o = overrides.get(override_key(ev))
+    if o is None:
+        return False
+    if o.get("unlocated"):
+        ev["lat"], ev["lng"] = None, None
+    else:
+        ev["lat"], ev["lng"] = o.get("lat"), o.get("lng")
+    return True
+
+
 def load_events():
     data = load_json(EVENTS_PATH, {"events": []})
     if "events" not in data:
@@ -176,20 +205,31 @@ def geocode(query, cache, online=True, mock_table=None):
     return None, None
 
 
-def geocode_event(ev, cache, online=True, mock_table=None):
-    """Fill ev['lat']/['lng'] if missing, trying venue+city+country then city+country."""
-    if ev.get("lat") is not None and ev.get("lng") is not None:
+def geocode_event(ev, cache, online=True, mock_table=None, force=False):
+    """Resolve ev['lat']/['lng'] from a PLACE-bearing query only.
+
+    Integrity rule: never geocode a bare country — that produces a confident but
+    wrong pin. We try venue+city+country, then city+country, and as a last resort
+    the title+country (the place is often only in the title, e.g. 'Brännö Sommarjam').
+    If none of those resolve, lat/lng are set to None and the event is treated as
+    'location to be confirmed' (shown in the list, but NOT pinned on the map)."""
+    if not force and ev.get("lat") is not None and ev.get("lng") is not None:
         return ev
+    venue, city, country, title = (ev.get("venue"), ev.get("city"),
+                                   ev.get("country"), ev.get("title"))
     attempts = []
-    if ev.get("venue"):
-        attempts.append(", ".join(filter(None, [ev.get("venue"), ev.get("city"), ev.get("country")])))
-    attempts.append(", ".join(filter(None, [ev.get("city"), ev.get("country")])))
+    if venue and (city or country):
+        attempts.append(", ".join(filter(None, [venue, city, country])))
+    if city:
+        attempts.append(", ".join(filter(None, [city, country])))
+    if not city and not venue and title:
+        attempts.append(", ".join(filter(None, [title, country])))  # place often in title
     for q in attempts:
         lat, lng = geocode(q, cache, online=online, mock_table=mock_table)
         if lat is not None:
             ev["lat"], ev["lng"] = lat, lng
             return ev
-    ev["lat"], ev["lng"] = None, None
+    ev["lat"], ev["lng"] = None, None  # unlocated → no pin, flagged in the list
     return ev
 
 
@@ -210,7 +250,9 @@ multi-day gatherings and retreats)
 message date provided), or null
   end_date     "YYYY-MM-DD" or null (same as start_date for single-day events)
   time         e.g. "19:00" or "all day" or null
-  city         city name or null
+  city         the town/place of the event. ALWAYS fill this when any place is \
+named — if only an island, region, area or venue is given (sometimes only in the \
+title), put that here. Use null only when truly no location is stated.
   country      country name in English or null
   venue        venue name or null
   link         the event's URL if present, else null. Links often appear as \
@@ -494,15 +536,55 @@ def airtable_list_status(status):
     return out
 
 
-def airtable_set_status(record_id, status):
+def airtable_patch(record_id, fields):
     import requests
     r = requests.patch(
         _airtable_url() + "/" + record_id,
         headers=airtable_headers(),
-        json={"fields": {"Status": status}},
+        json={"fields": fields, "typecast": True},
         timeout=30,
     )
+    if r.status_code >= 400:
+        print("  Airtable patch error:", r.status_code, r.text[:200])
     r.raise_for_status()
+
+
+def airtable_set_status(record_id, status):
+    airtable_patch(record_id, {"Status": status})
+
+
+def airtable_regeocode(overrides=None):
+    """One-time repair: re-resolve every Airtable row with the corrected geocoding
+    (never country-only) + manual overrides, and write the new Lat/Lng back (clearing
+    them when a location can't be trusted). Returns number of rows changed."""
+    import requests
+    overrides = overrides or {}
+    cache = load_json(GEOCACHE_PATH, {})
+    rows, offset = [], None
+    while True:
+        params = {"fields[]": ["Title", "Venue", "City", "Country", "Link", "Lat", "Lng"],
+                  "pageSize": 100}
+        if offset:
+            params["offset"] = offset
+        r = requests.get(_airtable_url(), headers=airtable_headers(), params=params, timeout=30)
+        r.raise_for_status()
+        data = r.json()
+        rows.extend(data.get("records", []))
+        offset = data.get("offset")
+        if not offset:
+            break
+    changed = 0
+    for rec in rows:
+        f = rec.get("fields", {})
+        ev = {"title": f.get("Title"), "venue": f.get("Venue"), "city": f.get("City"),
+              "country": f.get("Country"), "link": f.get("Link")}
+        if not apply_override(ev, overrides):
+            geocode_event(ev, cache, online=True, force=True)
+        if (ev.get("lat"), ev.get("lng")) != (f.get("Lat"), f.get("Lng")):
+            airtable_patch(rec["id"], {"Lat": ev.get("lat"), "Lng": ev.get("lng")})
+            changed += 1
+    save_json(GEOCACHE_PATH, cache)
+    return changed
 
 
 # ---------------------------------------------------------------- mapping helpers

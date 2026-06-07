@@ -127,8 +127,9 @@ def main():
         client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
         extractor = lambda text, date: oc.extract_events_claude(text, date, client)
 
+    overrides = oc.load_overrides()
     print("Messages to process:", len(messages))
-    print("Already known (skip):", len(existing_keys))
+    print("Already known (skip):", len(existing_keys), "| manual overrides:", len(overrides))
 
     candidates, seen = [], set()
     for m in messages:
@@ -138,7 +139,8 @@ def main():
         for ev in events:
             if oc.is_past(ev):
                 continue  # skip events that have already happened
-            oc.geocode_event(ev, cache, online=not DRY, mock_table=MOCK_GEO)
+            if not oc.apply_override(ev, overrides):  # manual placement always wins
+                oc.geocode_event(ev, cache, online=not DRY, mock_table=MOCK_GEO)
             key = oc.dedupe_key(ev)
             if key in existing_keys or key in seen:
                 continue  # already on the map, already in Airtable, or a repeat this run

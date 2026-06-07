@@ -1,0 +1,5 @@
+{
+  "_comment": "Manual location corrections from the review tool (location-review-tool.html). The pipeline applies these and they ALWAYS win over auto-geocoding. Keyed by the event's link (or id:<id> when it has no link). Replace this file with the one the review tool downloads.",
+  "version": 1,
+  "overrides": {}
+}

@@ -4,16 +4,16 @@ Step 2 of the Otterotter pipeline.
 Reads Airtable rows you marked Status = Approved, merges them into
 data/events.json, and flips them to Status = Published so they aren't added twice.
 
-Safeguard: it also re-checks rows already marked Published and, if one isn't
-actually on the map yet (e.g. you flipped it to Published by accident), it adds
-it. So a mis-click can't lose an event.
+Also:
+- applies manual location overrides (from the review tool) — these always win;
+- publishes events with no reliable location (flagged on the site, not pinned);
+- UPDATES events already on the map when their Airtable data changes (so location
+  fixes and edits propagate);
+- recovers any "Published" row that isn't actually on the map (mis-click safety).
 
 Live run needs: AIRTABLE_TOKEN, AIRTABLE_BASE_ID
 
-Offline check:
-  python pipeline/sync_approved.py --dry-run
-  (reads pipeline/fixtures/sample_approved.json, merges into a temp copy of
-   events.json, prints the result, writes nothing permanent)
+Offline check:  python pipeline/sync_approved.py --dry-run
 """
 
 import os
@@ -24,26 +24,39 @@ import otter_common as oc
 DRY = "--dry-run" in sys.argv
 FIXTURES = os.path.join(oc.HERE, "fixtures", "sample_approved.json")
 
+MUTABLE = ["title", "description", "type", "start_date", "end_date", "time",
+           "city", "country", "venue", "lat", "lng", "link"]
 
-def _consider(rec, events_data, existing_keys, label):
-    """Add the event for an Airtable row to events_data if it's valid and not
-    already present (by link/content key). Returns True if added."""
+
+def _build(rec, overrides):
     ev = oc.airtable_record_to_event(rec.get("fields", {}))
+    oc.apply_override(ev, overrides)  # manual placement wins
+    return ev
+
+
+def _consider(ev, events_data, index, label):
+    """Add a new event, or update an existing one in place. Returns a status word."""
     if not ev.get("start_date"):
         print("  ! skipping (no date):", ev.get("title"))
-        return False
+        return "skip"
     if oc.is_past(ev):
-        return False  # don't (re)publish events that have already happened
-    if ev.get("lat") is None or ev.get("lng") is None:
-        print("  ! skipping (no coordinates):", ev.get("title"))
-        return False
+        return "skip"
     key = oc.dedupe_key(ev)
-    if key in existing_keys:
-        return False
+    if key in index:
+        cur, changed = index[key], False
+        for fld in MUTABLE:
+            if cur.get(fld) != ev.get(fld):
+                cur[fld] = ev.get(fld)
+                changed = True
+        if changed:
+            print("  ~ updated:", ev.get("title"))
+            return "updated"
+        return "same"
     oc.add_event(events_data, ev)
-    existing_keys.add(key)
-    print("  +", label, ":", ev.get("start_date"), "|", ev.get("title"), "|", ev.get("city"))
-    return True
+    index[key] = ev
+    loc = ev.get("city") or "(location to confirm)"
+    print("  +", label, ":", ev.get("start_date"), "|", ev.get("title"), "|", loc)
+    return "added"
 
 
 def main():
@@ -56,7 +69,8 @@ def main():
         print("Removed", n0 - len(events_data["events"]), "sample events")
 
     before = len(events_data["events"])
-    existing_keys = oc.existing_dedupe_keys(events_data)
+    overrides = oc.load_overrides()
+    index = {oc.dedupe_key(e): e for e in events_data["events"]}
 
     if DRY:
         print("DRY RUN — no network, no permanent writes\n")
@@ -66,23 +80,31 @@ def main():
         approved = oc.airtable_list_status("Approved")
         published = oc.airtable_list_status("Published")
 
-    print("Approved rows to publish:", len(approved))
-    added, publish_ids = 0, []
+    print("Manual overrides:", len(overrides), "| Approved rows:", len(approved))
+    added = updated = recovered = 0
+    publish_ids = []
     for rec in approved:
-        if _consider(rec, events_data, existing_keys, "added"):
+        r = _consider(_build(rec, overrides), events_data, index, "added")
+        if r == "added":
             added += 1
-        publish_ids.append(rec.get("id"))  # approved -> mark Published either way
+        elif r == "updated":
+            updated += 1
+        publish_ids.append(rec.get("id"))
 
-    # safeguard: recover any "Published" row that isn't actually on the map
-    recovered = 0
     if published:
         print("Re-checking", len(published), "already-Published rows…")
         for rec in published:
-            if _consider(rec, events_data, existing_keys, "recovered"):
+            r = _consider(_build(rec, overrides), events_data, index, "recovered")
+            if r == "added":
                 recovered += 1
+            elif r == "updated":
+                updated += 1
 
-    print("\nEvents before:", before, "| added:", added, "| recovered:", recovered,
-          "| after:", len(events_data["events"]))
+    unlocated = sum(1 for e in events_data["events"]
+                    if e.get("lat") is None or e.get("lng") is None)
+    print("\nEvents before:", before, "| added:", added, "| updated:", updated,
+          "| recovered:", recovered, "| after:", len(events_data["events"]),
+          "| unlocated (flagged, no pin):", unlocated)
 
     if DRY:
         print("\nResulting events.json would contain", len(events_data["events"]), "events.")
