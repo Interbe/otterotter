@@ -580,19 +580,49 @@
   // travel days needed for a leg: 1 normally, 2 if it's a long hop (>700 km)
   function travelDaysFor(km) { return km > 700 ? 2 : 1; }
 
+  // orientation + proper segment-crossing test (points are [lat, lng]; x=lng, y=lat)
+  function orient(a, b, c) {
+    return (b[1] - a[1]) * (c[0] - a[0]) - (b[0] - a[0]) * (c[1] - a[1]);
+  }
+  function properCross(p1, p2, p3, p4) {
+    var d1 = orient(p3, p4, p1), d2 = orient(p3, p4, p2),
+        d3 = orient(p1, p2, p3), d4 = orient(p1, p2, p4);
+    if (d1 === 0 || d2 === 0 || d3 === 0 || d4 === 0) return false;  // touching/collinear isn't a crossing
+    return ((d1 > 0) !== (d2 > 0)) && ((d3 > 0) !== (d4 > 0));
+  }
+
   // Build a realistic sequence: each next festival must start AFTER the previous
-  // one ends, plus travel days. (A 1-day buffer means end 12th -> earliest 14th.)
-  function buildItinerary(cands) {
-    var out = [], prev = null;
+  // one ends, plus travel days (1, or 2 for long hops), AND the new leg must not
+  // cross a leg already in the route — so the trip flows forward, not zig-zagging.
+  function buildItinerary(cands, start, end) {
+    var out = [], legs = [], prevPt = start, prev = null;
     for (var i = 0; i < cands.length; i++) {
-      var ev = cands[i];
-      if (!prev) { out.push(ev); prev = ev; continue; }
-      var km = haversineKm(prev.lat, prev.lng, ev.lat, ev.lng);
-      var needGap = travelDaysFor(km) + 1;  // end -> next start gap (1 travel day => gap 2)
-      if (daysBetween(prev.end_date || prev.start_date, ev.start_date) >= needGap) {
-        out.push(ev);
-        prev = ev;
+      var ev = cands[i], pt = [ev.lat, ev.lng];
+      if (prev) {
+        var km = haversineKm(prev.lat, prev.lng, ev.lat, ev.lng);
+        var needGap = travelDaysFor(km) + 1;  // end -> next start gap (1 travel day => gap 2)
+        if (daysBetween(prev.end_date || prev.start_date, ev.start_date) < needGap) continue;
       }
+      var crosses = false;
+      for (var j = 0; j < legs.length - 1; j++) {  // skip the adjacent (last) leg
+        if (properCross(prevPt, pt, legs[j][0], legs[j][1])) { crosses = true; break; }
+      }
+      if (crosses) continue;
+      out.push(ev);
+      legs.push([prevPt, pt]);
+      prevPt = pt;
+      prev = ev;
+    }
+    // the closing leg back to end/home must also not cross the route (matters most
+    // for loop trips where End = Start) — trim trailing stops that would force it
+    while (out.length) {
+      var bad = false;
+      for (var k = 0; k < legs.length - 1; k++) {
+        if (properCross(legs[legs.length - 1][1], end, legs[k][0], legs[k][1])) { bad = true; break; }
+      }
+      if (!bad) break;
+      out.pop();
+      legs.pop();
     }
     return out;
   }
@@ -615,13 +645,13 @@
         if (!(s <= toD && e >= fromD)) return false;  // overlaps the date window
         return segDistKm(ev.lat, ev.lng, start[0], start[1], end[0], end[1]) <= corridor;
       }).sort(function (a, b) { return a.start_date < b.start_date ? -1 : (a.start_date > b.start_date ? 1 : 0); });
-      var stops = buildItinerary(candidates);
+      var stops = buildItinerary(candidates, start, end);
       var skipped = candidates.length - stops.length;
       drawTrip(start, end, stops, startQ, endQ);
       renderItinerary(start, end, stops);
       status.textContent = stops.length
         ? (stops.length + " festival" + (stops.length > 1 ? "s" : "") + " you could do in sequence" +
-           (skipped > 0 ? " · " + skipped + " more on the route didn't fit the timing" : ""))
+           (skipped > 0 ? " · " + skipped + " more nearby didn't fit (timing or backtracking)" : ""))
         : "No festivals fit a realistic schedule here — try a wider detour or longer window.";
     }).catch(function () {
       status.textContent = "Couldn't find one of those places — try ‘City, Country’.";
