@@ -10,7 +10,10 @@
 
 [build]
   publish = "."
-  ignore = "git diff --quiet HEAD^ HEAD -- index.html css js data"
+  ignore = "git diff --quiet HEAD^ HEAD -- index.html css js data netlify"
+
+[functions]
+  directory = "netlify/functions"
 
 # Allow the local location-review tool to fetch the public events data.
 [[headers]]

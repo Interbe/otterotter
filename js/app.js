@@ -588,6 +588,38 @@
   // travel days needed for a leg: 1 normally, 2 if it's a long hop (>700 km)
   function travelDaysFor(km) { return km > 700 ? 2 : 1; }
 
+  // Driving-route check via the Netlify function (ORS). Degrades gracefully: if the
+  // function isn't deployed yet, legs come back "unavailable" and we fall back to
+  // straight-line distance with no driveability filtering.
+  function routeLeg(a, b) {
+    return fetch("/.netlify/functions/route?from=" + a[1] + "," + a[0] + "&to=" + b[1] + "," + b[0])
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .catch(function () { return { unavailable: true }; });
+  }
+  function formatDur(min) {
+    if (min == null) return "";
+    var h = Math.floor(min / 60), m = Math.round(min % 60);
+    return h ? (h + "h" + (m ? " " + m + "m" : "")) : (m + "m");
+  }
+  // Walk the itinerary, routing each leg; drop stops that aren't drivable from the
+  // previous one. Calls done(driveableStops, endLeg) when finished.
+  function validateDriveable(start, end, stops, done) {
+    var out = [], prev = start, i = 0;
+    function step() {
+      if (i >= stops.length) { routeLeg(prev, end).then(function (eleg) { done(out, eleg); }); return; }
+      var s = stops[i++];
+      routeLeg(prev, [s.lat, s.lng]).then(function (leg) {
+        if (leg && leg.ok) {
+          s._km = Math.round(leg.km); s._min = Math.round(leg.min); out.push(s); prev = [s.lat, s.lng];
+        } else if (leg && leg.unavailable) {  // routing not available -> straight-line fallback
+          s._km = Math.round(haversineKm(prev[0], prev[1], s.lat, s.lng)); s._min = null; out.push(s); prev = [s.lat, s.lng];
+        }  // leg.ok === false -> not drivable -> skip this stop, keep prev
+        step();
+      });
+    }
+    step();
+  }
+
   // orientation + proper segment-crossing test (points are [lat, lng]; x=lng, y=lat)
   function orient(a, b, c) {
     return (b[1] - a[1]) * (c[0] - a[0]) - (b[0] - a[0]) * (c[1] - a[1]);
@@ -662,14 +694,17 @@
         }
         return true;
       }).sort(function (a, b) { return a.start_date < b.start_date ? -1 : (a.start_date > b.start_date ? 1 : 0); });
-      var stops = buildItinerary(candidates, start, end);
-      var skipped = candidates.length - stops.length;
-      drawTrip(start, end, stops, startQ, endQ);
-      renderItinerary(start, end, stops);
-      status.textContent = stops.length
-        ? (stops.length + " festival" + (stops.length > 1 ? "s" : "") + " you could do in sequence" +
-           (skipped > 0 ? " · " + skipped + " more nearby didn't fit (timing or backtracking)" : ""))
-        : "No festivals fit a realistic schedule here — try a wider detour or longer window.";
+      var geo = buildItinerary(candidates, start, end);
+      status.textContent = "Checking driving routes…";
+      validateDriveable(start, end, geo, function (stops, endLeg) {
+        var skipped = candidates.length - stops.length;
+        drawTrip(start, end, stops, startQ, endQ);
+        renderItinerary(start, end, stops, endLeg);
+        status.textContent = stops.length
+          ? (stops.length + " festival" + (stops.length > 1 ? "s" : "") + " you can drive in sequence" +
+             (skipped > 0 ? " · " + skipped + " more nearby didn't fit (timing, route or backtracking)" : ""))
+          : "No festivals fit a drivable schedule here — try a wider detour or longer window.";
+      });
     }).catch(function () {
       status.textContent = "Couldn't find one of those places — try ‘City, Country’.";
     });
@@ -694,25 +729,20 @@
     if (pts.length && typeof map.fitBounds === "function") map.fitBounds(pts, { padding: [40, 40] });
   }
 
-  function renderItinerary(start, end, stops) {
+  function renderItinerary(start, end, stops, endLeg) {
     var list = document.getElementById("event-list");
     document.getElementById("result-count").textContent = stops.length + (stops.length === 1 ? " stop" : " stops");
     if (!stops.length) {
       list.innerHTML = '<div class="empty-state">No festivals on this route in these dates.<br>Try a wider detour or a longer date window.</div>';
       return;
     }
-    var prev = start, total = 0, html = "";
+    var total = 0, html = "";
     for (var i = 0; i < stops.length; i++) {
       var s = stops[i];
-      var legKm = Math.round(haversineKm(prev[0], prev[1], s.lat, s.lng));
-      total += legKm;
-      var leg;
-      if (i === 0) {
-        leg = legKm + " km from start";
-      } else {
-        var td = travelDaysFor(legKm);
-        leg = legKm + " km from previous · ~" + td + " day" + (td > 1 ? "s" : "") + " travel";
-      }
+      var km = (s._km != null) ? s._km : 0;
+      total += km;
+      var dur = (s._min != null) ? " · ~" + formatDur(s._min) + " drive" : "";
+      var leg = km + " km from " + (i === 0 ? "start" : "previous") + dur;
       html += '<article class="event-card">' +
         '<div class="badges"><span class="badge type">Stop ' + (i + 1) + "</span></div>" +
         "<h3>" + escapeHtml(s.title) + "</h3>" +
@@ -722,10 +752,10 @@
         (safeUrl(s.link) ? '<a class="event-link" href="' + escapeHtml(safeUrl(s.link)) +
           '" target="_blank" rel="noopener">Event details →</a>' : "") +
         "</article>";
-      prev = [s.lat, s.lng];
     }
-    total += Math.round(haversineKm(prev[0], prev[1], end[0], end[1]));
-    list.innerHTML = '<div class="trip-summary">' + stops.length + " stops · ~" + total + " km total</div>" + html;
+    if (endLeg && endLeg.ok) total += Math.round(endLeg.km);
+    else { var ls = stops[stops.length - 1]; total += Math.round(haversineKm(ls.lat, ls.lng, end[0], end[1])); }
+    list.innerHTML = '<div class="trip-summary">' + stops.length + " stops · ~" + total + " km driving</div>" + html;
   }
 
   function clearTrip() {
