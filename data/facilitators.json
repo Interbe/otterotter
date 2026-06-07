@@ -1,5 +1,5 @@
 {
-  "_comment": "Facilitator profiles for Otterotter. 'photo' is a path under assets/facilitators/ (leave blank to show an initials badge). 'modalities' are the 'Meet me at' tags. Bios are short summaries.",
+  "_comment": "Facilitator profiles for Otterotter. 'photo' is a path under assets/facilitators/. 'modalities' are the 'Meet me at' tags. 'event_links' links a facilitator to events: paste the exact event website link(s) (the same URL shown on the event) into the array, and the site cross-links the facilitator and those events both ways. Example: \"event_links\": [\"https://contactfestival.de/\"].",
   "facilitators": [
     {
       "id": "dorte-bjerre-jensen",
@@ -8,7 +8,8 @@
       "location": "",
       "modalities": ["Contact Improvisation"],
       "website": "",
-      "photo": "assets/facilitators/dorte-bjerre-jensen.jpg"
+      "photo": "assets/facilitators/dorte-bjerre-jensen.jpg",
+      "event_links": []
     },
     {
       "id": "sebastian-grubb",
@@ -17,7 +18,8 @@
       "location": "Copenhagen, Denmark & California, USA",
       "modalities": ["Contact Improvisation", "Beväg", "Stärk"],
       "website": "https://sebastian.fit/",
-      "photo": "assets/facilitators/sebastian-grubb.jpg"
+      "photo": "assets/facilitators/sebastian-grubb.jpg",
+      "event_links": []
     },
     {
       "id": "maja-ejrnaes",
@@ -26,7 +28,8 @@
       "location": "",
       "modalities": ["Contact Improvisation"],
       "website": "",
-      "photo": "assets/facilitators/maja-ejrnaes.jpg"
+      "photo": "assets/facilitators/maja-ejrnaes.jpg",
+      "event_links": []
     }
   ]
 }
