@@ -1,5 +1,45 @@
 {
-  "_comment": "Manual location corrections from the review tool (location-review-tool.html). The pipeline applies these and they ALWAYS win over auto-geocoding. Keyed by the event's link (or id:<id> when it has no link). Replace this file with the one the review tool downloads.",
   "version": 1,
-  "overrides": {}
+  "overrides": {
+    "earthdance.net/event/fall-jam-2026": {
+      "lat": 42.498586,
+      "lng": -72.937632
+    },
+    "facebook.com/events/1955853645139141": {
+      "lat": 45.518707,
+      "lng": 0.792646
+    },
+    "canva.com/design/daggrkmgg6g/z5nacssqnb_je7t8lmhohq/view": {
+      "lat": 43.657987,
+      "lng": 11.561276
+    },
+    "living-contact-dance.de/festival": {
+      "lat": 49.263397,
+      "lng": 9.437744
+    },
+    "wildheartcenter.art/diving-into-the-fabric-of-touch": {
+      "lat": 41.581039,
+      "lng": -74.067078
+    },
+    "kdmcontactimpro.wordpress.com": {
+      "lat": 43.359588,
+      "lng": -5.446107
+    },
+    "casinasettarte.org/seminari-intensivi/feldenkrais-contact-improvisation-and-ensemble-composition": {
+      "lat": 40.740819,
+      "lng": 17.504396
+    },
+    "earthdance.net/event/summer-jam-40th-anniversary-10-day-celebration": {
+      "lat": 42.497574,
+      "lng": -72.944627
+    },
+    "assembly.contact/horizons": {
+      "lat": 38.817408,
+      "lng": -9.396272
+    },
+    "facebook.com/events/s/branno-sommarjam-2026/1484277169805028": {
+      "lat": 57.642323,
+      "lng": 11.778288
+    }
+  }
 }
