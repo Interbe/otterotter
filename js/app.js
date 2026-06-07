@@ -11,6 +11,7 @@
   var allEvents = [];
   var allFacilitators = [];
   var facilitatorFilter = null;  // facilitator id when filtering the map to one person
+  var tripLayer = null;          // map layer for the road-trip route
   var markersById = {};
   var map, clusterGroup;
 
@@ -83,6 +84,13 @@
     return String(s == null ? "" : s)
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
+  }
+
+  // Only allow safe link schemes (blocks javascript:, data:, etc. from community data)
+  function safeUrl(u) {
+    if (!u) return "";
+    var s = String(u).trim();
+    return (/^https?:\/\//i.test(s) || /^mailto:/i.test(s)) ? s : "";
   }
 
   // ---- Event <-> facilitator linking (driven by facilitators.json `event_links`) ----
@@ -161,7 +169,7 @@
         '<p class="popup-meta">' + escapeHtml(TYPE_LABELS[ev.type] || ev.type) +
         " · " + escapeHtml(ev.city) + ", " + escapeHtml(ev.country) + "<br>" +
         escapeHtml(formatDateRange(ev)) + "</p>" +
-        (ev.link ? '<a class="popup-link" href="' + escapeHtml(ev.link) +
+        (safeUrl(ev.link) ? '<a class="popup-link" href="' + escapeHtml(safeUrl(ev.link)) +
           '" target="_blank" rel="noopener">Event details →</a>' : "")
       );
       markersById[ev.id] = m;
@@ -199,7 +207,7 @@
       escapeHtml([ev.venue, ev.city, ev.country].filter(Boolean).join(", ")) + "</p>" +
       '<p class="event-desc">' + escapeHtml(ev.description || "") + "</p>" +
       facHtml +
-      (ev.link ? '<a class="event-link" href="' + escapeHtml(ev.link) +
+      (safeUrl(ev.link) ? '<a class="event-link" href="' + escapeHtml(safeUrl(ev.link)) +
         '" target="_blank" rel="noopener">Event details →</a>' : "") +
       "</article>"
     );
@@ -404,7 +412,7 @@
         '<p class="bio">' + escapeHtml(f.bio_short || "") + "</p>" +
         '<div class="mods">' + mods + "</div>" +
         cta +
-        (f.website ? '<a class="event-link" href="' + escapeHtml(f.website) +
+        (safeUrl(f.website) ? '<a class="event-link" href="' + escapeHtml(safeUrl(f.website)) +
           '" target="_blank" rel="noopener">Visit website →</a>' : "") +
         "</article>"
       );
@@ -534,6 +542,139 @@
     });
   }
 
+  // ---- Road-trip planner ----
+  function haversineKm(aLat, aLng, bLat, bLng) {
+    var R = 6371, toR = Math.PI / 180;
+    var dLat = (bLat - aLat) * toR, dLng = (bLng - aLng) * toR;
+    var s = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(aLat * toR) * Math.cos(bLat * toR) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * R * Math.asin(Math.sqrt(s));
+  }
+
+  function segDistKm(pLat, pLng, aLat, aLng, bLat, bLng) {
+    // local equirectangular projection to km, then point-to-segment distance
+    var refLat = ((aLat + bLat) / 2) * Math.PI / 180;
+    var kx = 111.32 * Math.cos(refLat), ky = 110.57;
+    var ax = aLng * kx, ay = aLat * ky, bx = bLng * kx, by = bLat * ky, px = pLng * kx, py = pLat * ky;
+    var dx = bx - ax, dy = by - ay, len2 = dx * dx + dy * dy;
+    var t = len2 ? ((px - ax) * dx + (py - ay) * dy) / len2 : 0;
+    t = Math.max(0, Math.min(1, t));
+    var cx = ax + t * dx, cy = ay + t * dy;
+    return Math.sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy));
+  }
+
+  function daysBetween(a, b) {
+    var pa = parseDate(a), pb = parseDate(b);
+    return (pa && pb) ? Math.round((pb - pa) / 86400000) : 0;
+  }
+
+  function geocodePlace(q) {
+    return fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + encodeURIComponent(q))
+      .then(function (r) { return r.json(); })
+      .then(function (h) {
+        if (h && h[0]) return [parseFloat(h[0].lat), parseFloat(h[0].lon)];
+        throw new Error("not found");
+      });
+  }
+
+  function planTrip() {
+    var startQ = document.getElementById("trip-start").value.trim();
+    var endQ = document.getElementById("trip-end").value.trim() || startQ;
+    var fromD = document.getElementById("trip-from").value;
+    var toD = document.getElementById("trip-to").value;
+    var corridor = +document.getElementById("trip-corridor").value;
+    var status = document.getElementById("trip-status");
+    if (!startQ || !fromD || !toD) { status.textContent = "Please fill in start, from and to."; return; }
+    if (fromD > toD) { status.textContent = "‘From’ is after ‘To’ — check the dates."; return; }
+    status.textContent = "Finding your route…";
+    Promise.all([geocodePlace(startQ), geocodePlace(endQ)]).then(function (res) {
+      var start = res[0], end = res[1];
+      var stops = allEvents.filter(function (ev) {
+        if (!isLocated(ev)) return false;
+        var s = ev.start_date, e = ev.end_date || ev.start_date;
+        if (!(s <= toD && e >= fromD)) return false;  // overlaps the date window
+        return segDistKm(ev.lat, ev.lng, start[0], start[1], end[0], end[1]) <= corridor;
+      }).sort(function (a, b) { return a.start_date < b.start_date ? -1 : (a.start_date > b.start_date ? 1 : 0); });
+      drawTrip(start, end, stops, startQ, endQ);
+      renderItinerary(start, end, stops);
+      status.textContent = stops.length
+        ? (stops.length + " festival" + (stops.length > 1 ? "s" : "") + " along your route")
+        : "No festivals on this route in these dates — try a wider detour or longer window.";
+    }).catch(function () {
+      status.textContent = "Couldn't find one of those places — try ‘City, Country’.";
+    });
+  }
+
+  function drawTrip(start, end, stops, startName, endName) {
+    if (!map) return;
+    if (tripLayer) map.removeLayer(tripLayer);
+    if (clusterGroup) clusterGroup.clearLayers();
+    tripLayer = L.layerGroup().addTo(map);
+    var pts = [start].concat(stops.map(function (s) { return [s.lat, s.lng]; })).concat([end]);
+    L.polyline(pts, { color: "#d2613f", weight: 3, dashArray: "6 8", opacity: 0.85 }).addTo(tripLayer);
+    L.marker(start).addTo(tripLayer).bindPopup("Start: " + escapeHtml(startName));
+    if (normLink(endName) !== normLink(startName))
+      L.marker(end).addTo(tripLayer).bindPopup("End: " + escapeHtml(endName));
+    stops.forEach(function (s, i) {
+      var icon = L.divIcon({ className: "trip-pin", html: '<div class="trip-num">' + (i + 1) + "</div>",
+        iconSize: [26, 26], iconAnchor: [13, 13] });
+      L.marker([s.lat, s.lng], { icon: icon }).addTo(tripLayer)
+        .bindPopup("<b>" + escapeHtml(s.title) + "</b><br>" + escapeHtml(formatDateRange(s)));
+    });
+    if (pts.length && typeof map.fitBounds === "function") map.fitBounds(pts, { padding: [40, 40] });
+  }
+
+  function renderItinerary(start, end, stops) {
+    var list = document.getElementById("event-list");
+    document.getElementById("result-count").textContent = stops.length + (stops.length === 1 ? " stop" : " stops");
+    if (!stops.length) {
+      list.innerHTML = '<div class="empty-state">No festivals on this route in these dates.<br>Try a wider detour or a longer date window.</div>';
+      return;
+    }
+    var prev = start, total = 0, html = "";
+    for (var i = 0; i < stops.length; i++) {
+      var s = stops[i];
+      var legKm = Math.round(haversineKm(prev[0], prev[1], s.lat, s.lng));
+      total += legKm;
+      var warn = "";
+      if (i > 0) {
+        var gap = daysBetween(stops[i - 1].end_date || stops[i - 1].start_date, s.start_date);
+        if (gap < 0) warn = '<span class="badge tbc">overlaps previous</span>';
+        else if (legKm / Math.max(gap, 1) > 700) warn = '<span class="badge soon">tight connection</span>';
+      }
+      html += '<article class="event-card">' +
+        '<div class="badges"><span class="badge type">Stop ' + (i + 1) + "</span>" + warn + "</div>" +
+        "<h3>" + escapeHtml(s.title) + "</h3>" +
+        '<p class="event-meta">' + escapeHtml(formatDateRange(s)) + " · " +
+        escapeHtml([s.city, s.country].filter(Boolean).join(", ")) + "</p>" +
+        '<p class="event-desc">' + legKm + " km from " + (i === 0 ? "start" : "previous stop") + "</p>" +
+        (safeUrl(s.link) ? '<a class="event-link" href="' + escapeHtml(safeUrl(s.link)) +
+          '" target="_blank" rel="noopener">Event details →</a>' : "") +
+        "</article>";
+      prev = [s.lat, s.lng];
+    }
+    total += Math.round(haversineKm(prev[0], prev[1], end[0], end[1]));
+    list.innerHTML = '<div class="trip-summary">' + stops.length + " stops · ~" + total + " km total</div>" + html;
+  }
+
+  function clearTrip() {
+    if (tripLayer) { map.removeLayer(tripLayer); tripLayer = null; }
+    document.getElementById("trip-status").textContent = "";
+    applyFilters();  // restore normal markers + list
+  }
+
+  function initTrip() {
+    var toggle = document.getElementById("trip-toggle"), panel = document.getElementById("trip-panel");
+    if (!toggle) return;
+    toggle.addEventListener("click", function () {
+      panel.hidden = !panel.hidden;
+      toggle.classList.toggle("open", !panel.hidden);
+      if (!panel.hidden && map) setTimeout(function () { map.invalidateSize(); }, 50);
+    });
+    document.getElementById("trip-plan").addEventListener("click", planTrip);
+    document.getElementById("trip-clear").addEventListener("click", clearTrip);
+  }
+
   // ---- Data loading ----
   function loadJSON(url) {
     return fetch(url).then(function (r) {
@@ -546,6 +687,7 @@
     initMap();
     initNav();
     initForm();
+    initTrip();
 
     // filter listeners
     ["search", "filter-type", "filter-country"].forEach(function (id) {

@@ -188,6 +188,45 @@ body::after {
 
 @media (max-width: 860px) { .soon-wrap { padding: 14px 18px 0; } }
 
+/* ---------- Road-trip planner ---------- */
+.trip-toggle-wrap { padding: 14px 30px 0; }
+.trip-toggle {
+  font-family: var(--font-body); font-weight: 700; font-size: 14.5px; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
+  padding: 10px 18px; color: var(--moss); box-shadow: var(--shadow-sm);
+}
+.trip-toggle:hover, .trip-toggle.open { background: var(--coral); color: #fff; border-color: var(--coral); }
+.trip-panel {
+  margin: 12px 30px 0; padding: 16px 20px;
+  background: rgba(255,255,255,0.6); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.7); border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.trip-fields { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.trip-field { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; font-weight: 700; color: var(--moss); }
+.trip-field input, .trip-field select {
+  padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px;
+  font-family: inherit; font-size: 14px; font-weight: 500; color: var(--ink); background: #fff;
+}
+.trip-field input[type="text"] { min-width: 170px; }
+.trip-clear {
+  font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer;
+  background: #fff; border: 1px solid var(--line); color: var(--moss); padding: 11px 16px; border-radius: 999px;
+}
+.trip-clear:hover { background: var(--bg); }
+.trip-status { margin: 12px 0 0; font-size: 13.5px; color: var(--muted); font-style: italic; }
+.trip-summary {
+  font-family: var(--font-display); font-style: italic; font-weight: 600; font-size: 15px;
+  color: var(--forest); margin: 2px 4px 12px; padding: 0 2px;
+}
+.trip-pin { background: transparent; border: none; }
+.trip-num {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--terra); color: #fff; border: 2px solid #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px; box-shadow: 0 2px 5px rgba(0,0,0,.35);
+}
+@media (max-width: 860px) { .trip-toggle-wrap, .trip-panel { margin-left: 18px; margin-right: 18px; padding-left: 0; } }
+
 /* ---------- Filters ---------- */
 .filters {
   display: flex; flex-wrap: wrap; gap: 12px; align-items: center;

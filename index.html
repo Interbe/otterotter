@@ -76,6 +76,28 @@
         <p class="events-hero-sub">Jams, classes, workshops &amp; festivals moving around the world — follow the pins and go play.</p>
       </div>
 
+      <div class="trip-toggle-wrap">
+        <button id="trip-toggle" class="trip-toggle" type="button">🧭 Plan a road trip between festivals</button>
+      </div>
+      <div class="trip-panel" id="trip-panel" hidden>
+        <div class="trip-fields">
+          <label class="trip-field">Start<input id="trip-start" type="text" placeholder="City, country" /></label>
+          <label class="trip-field">End<input id="trip-end" type="text" placeholder="City, country (or same)" /></label>
+          <label class="trip-field">From<input id="trip-from" type="date" /></label>
+          <label class="trip-field">To<input id="trip-to" type="date" /></label>
+          <label class="trip-field">Detour
+            <select id="trip-corridor">
+              <option value="100">Tight (100 km)</option>
+              <option value="150" selected>Medium (150 km)</option>
+              <option value="300">Wide (300 km)</option>
+            </select>
+          </label>
+          <button id="trip-plan" class="btn-primary" type="button">Plan trip</button>
+          <button id="trip-clear" class="trip-clear" type="button">Clear</button>
+        </div>
+        <p class="trip-status" id="trip-status"></p>
+      </div>
+
       <div class="soon-wrap" id="soon-wrap" hidden>
         <h3 class="soon-title">Happening soon</h3>
         <div class="soon-strip" id="soon-strip" aria-label="Upcoming events"><!-- cards injected --></div>
