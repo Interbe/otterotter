@@ -568,6 +568,14 @@
     return (pa && pb) ? Math.round((pb - pa) / 86400000) : 0;
   }
 
+  function bearingDeg(aLat, aLng, bLat, bLng) {
+    var toR = Math.PI / 180;
+    var y = Math.sin((bLng - aLng) * toR) * Math.cos(bLat * toR);
+    var x = Math.cos(aLat * toR) * Math.sin(bLat * toR) -
+      Math.sin(aLat * toR) * Math.cos(bLat * toR) * Math.cos((bLng - aLng) * toR);
+    return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;  // 0=N, 90=E, 180=S, 270=W
+  }
+
   function geocodePlace(q) {
     return fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + encodeURIComponent(q))
       .then(function (r) { return r.json(); })
@@ -633,17 +641,26 @@
     var fromD = document.getElementById("trip-from").value;
     var toD = document.getElementById("trip-to").value;
     var corridor = +document.getElementById("trip-corridor").value;
+    var dir = document.getElementById("trip-dir").value;  // "", or bearing 0/90/180/270
     var status = document.getElementById("trip-status");
     if (!startQ || !fromD || !toD) { status.textContent = "Please fill in start, from and to."; return; }
     if (fromD > toD) { status.textContent = "‘From’ is after ‘To’ — check the dates."; return; }
     status.textContent = "Finding your route…";
     Promise.all([geocodePlace(startQ), geocodePlace(endQ)]).then(function (res) {
       var start = res[0], end = res[1];
+      var isLoop = haversineKm(start[0], start[1], end[0], end[1]) < 30;
       var candidates = allEvents.filter(function (ev) {
         if (!isLocated(ev)) return false;
         var s = ev.start_date, e = ev.end_date || ev.start_date;
-        if (!(s <= toD && e >= fromD)) return false;  // overlaps the date window
-        return segDistKm(ev.lat, ev.lng, start[0], start[1], end[0], end[1]) <= corridor;
+        if (s < fromD || s > toD) return false;          // must START within the window
+        if (daysBetween(e, toD) < 1) return false;       // must END >=1 day before the trip ends
+        if (segDistKm(ev.lat, ev.lng, start[0], start[1], end[0], end[1]) > corridor) return false;
+        if (dir !== "" && isLoop) {                       // bias a loop toward a chosen direction
+          var b = bearingDeg(start[0], start[1], ev.lat, ev.lng);
+          var diff = Math.abs(b - (+dir)); diff = Math.min(diff, 360 - diff);
+          if (diff > 90) return false;
+        }
+        return true;
       }).sort(function (a, b) { return a.start_date < b.start_date ? -1 : (a.start_date > b.start_date ? 1 : 0); });
       var stops = buildItinerary(candidates, start, end);
       var skipped = candidates.length - stops.length;
