@@ -303,6 +303,10 @@ body::after {
   background: linear-gradient(135deg, var(--coral), var(--terra));
   color: #fff;
 }
+.badge.tbc {
+  background: rgba(106,90,134,0.14); color: var(--dusk);
+  border: 1px dashed rgba(106,90,134,0.5);
+}
 
 .event-link { display: inline-block; font-size: 13.5px; font-weight: 700; color: var(--terra); }
 
@@ -345,6 +349,48 @@ body::after {
   margin-bottom: 12px;
 }
 .avatar-img { object-fit: cover; background: var(--sand); }
+
+/* event <-> facilitator links */
+.event-facs { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+.fac-chip {
+  display: inline-block; font-weight: 700; color: var(--moss);
+  text-decoration: none; border-bottom: 1.5px dotted var(--sage); cursor: pointer;
+}
+.fac-chip:hover { color: var(--forest); border-bottom-style: solid; text-decoration: none; }
+.fac-events { font-size: 13.5px; margin: 0 0 12px; line-height: 1.6; }
+.fac-events-label { font-weight: 700; color: var(--moss); }
+.fac-event {
+  font-weight: 600; color: var(--terra); text-decoration: none;
+  border-bottom: 1.5px dotted rgba(210,97,63,0.5); cursor: pointer;
+}
+.fac-event:hover { border-bottom-style: solid; text-decoration: none; }
+.facilitator-card.is-clickable { cursor: pointer; }
+.facilitator-card.is-clickable:hover {
+  transform: translateY(-4px) rotate(0.4deg);
+  box-shadow: 0 0 0 2px var(--sage), var(--shadow);
+}
+.fac-cta { font-weight: 700; color: var(--terra); font-size: 14px; margin: 0 0 12px; }
+.fac-filter-bar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin: 16px 30px 0; padding: 12px 18px;
+  background: rgba(143,176,154,0.18); border: 1px solid var(--sage);
+  border-radius: 999px; font-size: 14px; color: var(--forest);
+}
+.fac-clear {
+  margin-left: auto; cursor: pointer;
+  background: var(--surface-solid); border: 1px solid var(--line);
+  color: var(--moss); font-weight: 700; font-size: 13px;
+  padding: 6px 14px; border-radius: 999px; font-family: inherit;
+}
+.fac-clear:hover { background: var(--coral); color: #fff; border-color: var(--coral); }
+.facilitator-card.fac-flash {
+  animation: facFlash 1.5s ease;
+}
+@keyframes facFlash {
+  0%, 100% { box-shadow: var(--shadow-sm); }
+  30% { box-shadow: 0 0 0 3px var(--coral), 0 12px 26px rgba(210,97,63,0.25); }
+}
+@media (prefers-reduced-motion: reduce){ .facilitator-card.fac-flash{ animation:none; } }
 
 /* ---------- Contribute form ---------- */
 .contribute-form {

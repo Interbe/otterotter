@@ -9,6 +9,8 @@
 
   // ---- State ----
   var allEvents = [];
+  var allFacilitators = [];
+  var facilitatorFilter = null;  // facilitator id when filtering the map to one person
   var markersById = {};
   var map, clusterGroup;
 
@@ -83,6 +85,30 @@
       .replace(/"/g, "&quot;");
   }
 
+  // ---- Event <-> facilitator linking (driven by facilitators.json `event_links`) ----
+  function normLink(url) {
+    if (!url) return "";
+    return String(url).trim().toLowerCase()
+      .replace(/^https?:\/\//, "").replace(/^www\./, "")
+      .split("?")[0].split("#")[0].replace(/\/+$/, "");
+  }
+
+  function facilitatorsForEvent(ev) {
+    if (!ev || !ev.link) return [];
+    var key = normLink(ev.link);
+    return allFacilitators.filter(function (f) {
+      return (f.event_links || []).some(function (l) { return normLink(l) === key; });
+    });
+  }
+
+  function eventsForFacilitator(f) {
+    var links = (f.event_links || []).map(normLink);
+    if (!links.length) return [];
+    return allEvents.filter(function (ev) {
+      return ev.link && links.indexOf(normLink(ev.link)) !== -1;
+    }).sort(function (a, b) { return daysUntil(a.start_date) - daysUntil(b.start_date); });
+  }
+
   // ---- Map ----
   function initMap() {
     map = L.map("map", { scrollWheelZoom: true, worldCopyJump: true }).setView([52, 12], 4);
@@ -144,11 +170,25 @@
   }
 
   // ---- Event list ----
+  function isLocated(ev) {
+    return typeof ev.lat === "number" && isFinite(ev.lat) &&
+           typeof ev.lng === "number" && isFinite(ev.lng);
+  }
+
   function eventCardHtml(ev) {
     var badges = '<span class="badge type">' +
       escapeHtml(TYPE_LABELS[ev.type] || ev.type) + "</span>";
     if (ev.featured) badges += '<span class="badge featured">Featured</span>';
     if (isSoon(ev)) badges += '<span class="badge soon">Soon</span>';
+    if (!isLocated(ev)) badges += '<span class="badge tbc">Location to be confirmed</span>';
+
+    var facs = facilitatorsForEvent(ev);
+    var facHtml = facs.length
+      ? '<p class="event-facs">With ' + facs.map(function (f) {
+          return '<a class="fac-chip" href="#facilitators-section" data-fac="' +
+            escapeHtml(f.id) + '">' + escapeHtml(f.name) + "</a>";
+        }).join(", ") + "</p>"
+      : "";
 
     return (
       '<article class="event-card' + (ev.featured ? " featured" : "") +
@@ -156,9 +196,9 @@
       '<div class="badges">' + badges + "</div>" +
       "<h3>" + escapeHtml(ev.title) + "</h3>" +
       '<p class="event-meta">' + escapeHtml(formatDateRange(ev)) + " · " +
-      escapeHtml(ev.venue ? ev.venue + ", " : "") + escapeHtml(ev.city) + ", " +
-      escapeHtml(ev.country) + "</p>" +
+      escapeHtml([ev.venue, ev.city, ev.country].filter(Boolean).join(", ")) + "</p>" +
       '<p class="event-desc">' + escapeHtml(ev.description || "") + "</p>" +
+      facHtml +
       (ev.link ? '<a class="event-link" href="' + escapeHtml(ev.link) +
         '" target="_blank" rel="noopener">Event details →</a>' : "") +
       "</article>"
@@ -191,6 +231,21 @@
         if (e.key === "Enter") focusMarker();
       });
     });
+
+    // clicking a facilitator chip jumps to that facilitator's profile
+    Array.prototype.forEach.call(list.querySelectorAll(".fac-chip"), function (a) {
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        showView("facilitators");
+        var card = document.getElementById("fac-" + a.getAttribute("data-fac"));
+        if (card) {
+          card.scrollIntoView({ behavior: "smooth", block: "center" });
+          card.classList.add("fac-flash");
+          setTimeout(function () { card.classList.remove("fac-flash"); }, 1500);
+        }
+      });
+    });
   }
 
   // ---- Filtering ----
@@ -201,7 +256,15 @@
     var month = document.getElementById("filter-month").value;
     var soonOnly = document.getElementById("filter-soon").checked;
 
+    // when a facilitator is selected, restrict to the events they're linked to
+    var facLinks = null;
+    if (facilitatorFilter) {
+      var fac = allFacilitators.filter(function (f) { return f.id === facilitatorFilter; })[0];
+      facLinks = fac ? (fac.event_links || []).map(normLink) : [];
+    }
+
     var filtered = allEvents.filter(function (ev) {
+      if (facLinks && (!ev.link || facLinks.indexOf(normLink(ev.link)) === -1)) return false;
       if (isPast(ev)) return false;
       if (type && ev.type !== type) return false;
       if (country && ev.country !== country) return false;
@@ -285,7 +348,7 @@
         '<button class="soon-card" data-id="' + escapeHtml(ev.id) + '" type="button">' +
         '<span class="soon-when">' + escapeHtml(when) + "</span>" +
         '<span class="soon-name">' + escapeHtml(ev.title) + "</span>" +
-        '<span class="soon-place">' + escapeHtml(ev.city) + ", " + escapeHtml(ev.country) + "</span>" +
+        '<span class="soon-place">' + escapeHtml([ev.city, ev.country].filter(Boolean).join(", ")) + "</span>" +
         '<span class="badge type">' + escapeHtml(TYPE_LABELS[ev.type] || ev.type) + "</span>" +
         "</button>"
       );
@@ -304,13 +367,14 @@
   }
 
   // ---- Facilitators ----
-  function renderFacilitators(list) {
+  function renderFacilitators() {
     var grid = document.getElementById("facilitator-grid");
-    if (!list || !list.length) {
+    if (!grid) return;
+    if (!allFacilitators.length) {
       grid.innerHTML = '<div class="empty-state">No facilitators listed yet.</div>';
       return;
     }
-    list = list.slice().sort(function (a, b) {
+    var list = allFacilitators.slice().sort(function (a, b) {
       return (a.name || "").localeCompare(b.name || "");
     });
     grid.innerHTML = list.map(function (f) {
@@ -323,18 +387,84 @@
         ? '<img class="avatar avatar-img" src="' + escapeHtml(f.photo) +
           '" alt="' + escapeHtml(f.name) + '" loading="lazy" />'
         : '<div class="avatar">' + escapeHtml(initials) + "</div>";
+
+      var n = eventsForFacilitator(f).length;
+      var cta = n
+        ? '<p class="fac-cta">See ' + n + " event" + (n > 1 ? "s" : "") +
+          " on the map →</p>"
+        : "";
+
       return (
-        '<article class="facilitator-card">' +
+        '<article class="facilitator-card' + (n ? " is-clickable" : "") +
+        '" id="fac-' + escapeHtml(f.id) + '" data-fac-id="' + escapeHtml(f.id) +
+        '"' + (n ? ' tabindex="0" role="button"' : "") + ">" +
         avatar +
         "<h3>" + escapeHtml(f.name) + "</h3>" +
         '<p class="loc">' + escapeHtml(f.location || "") + "</p>" +
         '<p class="bio">' + escapeHtml(f.bio_short || "") + "</p>" +
         '<div class="mods">' + mods + "</div>" +
+        cta +
         (f.website ? '<a class="event-link" href="' + escapeHtml(f.website) +
           '" target="_blank" rel="noopener">Visit website →</a>' : "") +
         "</article>"
       );
     }).join("");
+
+    // clicking a facilitator card filters the map/list to that person's events
+    Array.prototype.forEach.call(grid.querySelectorAll(".facilitator-card.is-clickable"), function (card) {
+      function go(e) {
+        if (e.target.tagName === "A") return;  // let the website link work
+        setFacilitatorFilter(card.getAttribute("data-fac-id"));
+      }
+      card.addEventListener("click", go);
+      card.addEventListener("keydown", function (e) { if (e.key === "Enter") go(e); });
+    });
+  }
+
+  // ---- Facilitator → map filter ----
+  function setFacilitatorFilter(id) {
+    facilitatorFilter = id;
+    showView("events");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    applyFilters();
+    updateFacChip();
+    fitToFacilitator();
+  }
+
+  function clearFacilitatorFilter() {
+    facilitatorFilter = null;
+    applyFilters();
+    updateFacChip();
+  }
+
+  function updateFacChip() {
+    var bar = document.getElementById("fac-filter-bar");
+    if (!facilitatorFilter) { if (bar) bar.parentNode.removeChild(bar); return; }
+    var fac = allFacilitators.filter(function (f) { return f.id === facilitatorFilter; })[0];
+    var name = fac ? fac.name : "this facilitator";
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.id = "fac-filter-bar";
+      bar.className = "fac-filter-bar";
+      var filters = document.querySelector(".filters");
+      filters.parentNode.insertBefore(bar, filters);
+    }
+    bar.innerHTML = 'Showing events with <strong>' + escapeHtml(name) +
+      '</strong> <button type="button" class="fac-clear">show all ✕</button>';
+    bar.querySelector(".fac-clear").addEventListener("click", clearFacilitatorFilter);
+  }
+
+  function fitToFacilitator() {
+    if (!map || typeof map.fitBounds !== "function") return;
+    var fac = allFacilitators.filter(function (f) { return f.id === facilitatorFilter; })[0];
+    if (!fac) return;
+    var links = (fac.event_links || []).map(normLink);
+    var pts = allEvents.filter(function (ev) {
+      return ev.link && links.indexOf(normLink(ev.link)) !== -1 &&
+        typeof ev.lat === "number" && typeof ev.lng === "number";
+    }).map(function (ev) { return [ev.lat, ev.lng]; });
+    if (pts.length === 1) map.setView(pts[0], 7, { animate: true });
+    else if (pts.length > 1) map.fitBounds(pts, { padding: [40, 40], maxZoom: 8 });
   }
 
   // ---- Navigation (tabs) ----
@@ -433,6 +563,7 @@
         populateMonthFilter();
         applyFilters();
         renderSoonStrip();
+        renderFacilitators();  // facilitator cards list their events once events are known
       })
       .catch(function (err) {
         document.getElementById("event-list").innerHTML =
@@ -441,8 +572,12 @@
       });
 
     loadJSON("data/facilitators.json")
-      .then(function (data) { renderFacilitators(data.facilitators || []); })
-      .catch(function () { renderFacilitators([]); });
+      .then(function (data) {
+        allFacilitators = data.facilitators || [];
+        renderFacilitators();
+        applyFilters();  // event cards pick up facilitator chips once facilitators are known
+      })
+      .catch(function () { allFacilitators = []; renderFacilitators(); });
   }
 
   if (document.readyState === "loading") {

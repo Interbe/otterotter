@@ -11,3 +11,9 @@
 [build]
   publish = "."
   ignore = "git diff --quiet HEAD^ HEAD -- index.html css js data"
+
+# Allow the local location-review tool to fetch the public events data.
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
