@@ -577,6 +577,26 @@
       });
   }
 
+  // travel days needed for a leg: 1 normally, 2 if it's a long hop (>700 km)
+  function travelDaysFor(km) { return km > 700 ? 2 : 1; }
+
+  // Build a realistic sequence: each next festival must start AFTER the previous
+  // one ends, plus travel days. (A 1-day buffer means end 12th -> earliest 14th.)
+  function buildItinerary(cands) {
+    var out = [], prev = null;
+    for (var i = 0; i < cands.length; i++) {
+      var ev = cands[i];
+      if (!prev) { out.push(ev); prev = ev; continue; }
+      var km = haversineKm(prev.lat, prev.lng, ev.lat, ev.lng);
+      var needGap = travelDaysFor(km) + 1;  // end -> next start gap (1 travel day => gap 2)
+      if (daysBetween(prev.end_date || prev.start_date, ev.start_date) >= needGap) {
+        out.push(ev);
+        prev = ev;
+      }
+    }
+    return out;
+  }
+
   function planTrip() {
     var startQ = document.getElementById("trip-start").value.trim();
     var endQ = document.getElementById("trip-end").value.trim() || startQ;
@@ -589,17 +609,20 @@
     status.textContent = "Finding your route…";
     Promise.all([geocodePlace(startQ), geocodePlace(endQ)]).then(function (res) {
       var start = res[0], end = res[1];
-      var stops = allEvents.filter(function (ev) {
+      var candidates = allEvents.filter(function (ev) {
         if (!isLocated(ev)) return false;
         var s = ev.start_date, e = ev.end_date || ev.start_date;
         if (!(s <= toD && e >= fromD)) return false;  // overlaps the date window
         return segDistKm(ev.lat, ev.lng, start[0], start[1], end[0], end[1]) <= corridor;
       }).sort(function (a, b) { return a.start_date < b.start_date ? -1 : (a.start_date > b.start_date ? 1 : 0); });
+      var stops = buildItinerary(candidates);
+      var skipped = candidates.length - stops.length;
       drawTrip(start, end, stops, startQ, endQ);
       renderItinerary(start, end, stops);
       status.textContent = stops.length
-        ? (stops.length + " festival" + (stops.length > 1 ? "s" : "") + " along your route")
-        : "No festivals on this route in these dates — try a wider detour or longer window.";
+        ? (stops.length + " festival" + (stops.length > 1 ? "s" : "") + " you could do in sequence" +
+           (skipped > 0 ? " · " + skipped + " more on the route didn't fit the timing" : ""))
+        : "No festivals fit a realistic schedule here — try a wider detour or longer window.";
     }).catch(function () {
       status.textContent = "Couldn't find one of those places — try ‘City, Country’.";
     });
@@ -636,18 +659,19 @@
       var s = stops[i];
       var legKm = Math.round(haversineKm(prev[0], prev[1], s.lat, s.lng));
       total += legKm;
-      var warn = "";
-      if (i > 0) {
-        var gap = daysBetween(stops[i - 1].end_date || stops[i - 1].start_date, s.start_date);
-        if (gap < 0) warn = '<span class="badge tbc">overlaps previous</span>';
-        else if (legKm / Math.max(gap, 1) > 700) warn = '<span class="badge soon">tight connection</span>';
+      var leg;
+      if (i === 0) {
+        leg = legKm + " km from start";
+      } else {
+        var td = travelDaysFor(legKm);
+        leg = legKm + " km from previous · ~" + td + " day" + (td > 1 ? "s" : "") + " travel";
       }
       html += '<article class="event-card">' +
-        '<div class="badges"><span class="badge type">Stop ' + (i + 1) + "</span>" + warn + "</div>" +
+        '<div class="badges"><span class="badge type">Stop ' + (i + 1) + "</span></div>" +
         "<h3>" + escapeHtml(s.title) + "</h3>" +
         '<p class="event-meta">' + escapeHtml(formatDateRange(s)) + " · " +
         escapeHtml([s.city, s.country].filter(Boolean).join(", ")) + "</p>" +
-        '<p class="event-desc">' + legKm + " km from " + (i === 0 ? "start" : "previous stop") + "</p>" +
+        '<p class="event-desc">' + leg + "</p>" +
         (safeUrl(s.link) ? '<a class="event-link" href="' + escapeHtml(safeUrl(s.link)) +
           '" target="_blank" rel="noopener">Event details →</a>' : "") +
         "</article>";
