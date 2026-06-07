@@ -1,0 +1,36 @@
+name: Repair locations (one-off)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - run: pip install -r pipeline/requirements.txt
+      - name: Re-geocode Airtable rows
+        working-directory: pipeline
+        env:
+          AIRTABLE_TOKEN: ${{ secrets.AIRTABLE_TOKEN }}
+          AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
+        run: python regeocode.py
+      - name: Publish corrected locations
+        working-directory: pipeline
+        env:
+          AIRTABLE_TOKEN: ${{ secrets.AIRTABLE_TOKEN }}
+          AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
+        run: python sync_approved.py
+      - name: Commit updates
+        run: |
+          git config user.name "otterotter-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/events.json pipeline/state.json pipeline/geocode_cache.json || true
+          git diff --staged --quiet || git commit -m "Repair event locations"
+          git push || true
