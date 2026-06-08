@@ -9,6 +9,9 @@
 
   // ---- State ----
   var allEvents = [];
+  var allFacilitators = [];
+  var facilitatorFilter = null;  // facilitator id when filtering the map to one person
+  var tripLayer = null;          // map layer for the road-trip route
   var markersById = {};
   var map, clusterGroup;
 
@@ -83,9 +86,41 @@
       .replace(/"/g, "&quot;");
   }
 
+  // Only allow safe link schemes (blocks javascript:, data:, etc. from community data)
+  function safeUrl(u) {
+    if (!u) return "";
+    var s = String(u).trim();
+    return (/^https?:\/\//i.test(s) || /^mailto:/i.test(s)) ? s : "";
+  }
+
+  // ---- Event <-> facilitator linking (driven by facilitators.json `event_links`) ----
+  function normLink(url) {
+    if (!url) return "";
+    return String(url).trim().toLowerCase()
+      .replace(/^https?:\/\//, "").replace(/^www\./, "")
+      .split("?")[0].split("#")[0].replace(/\/+$/, "");
+  }
+
+  function facilitatorsForEvent(ev) {
+    if (!ev || !ev.link) return [];
+    var key = normLink(ev.link);
+    return allFacilitators.filter(function (f) {
+      return (f.event_links || []).some(function (l) { return normLink(l) === key; });
+    });
+  }
+
+  function eventsForFacilitator(f) {
+    var links = (f.event_links || []).map(normLink);
+    if (!links.length) return [];
+    return allEvents.filter(function (ev) {
+      return ev.link && links.indexOf(normLink(ev.link)) !== -1;
+    }).sort(function (a, b) { return daysUntil(a.start_date) - daysUntil(b.start_date); });
+  }
+
   // ---- Map ----
   function initMap() {
-    map = L.map("map", { scrollWheelZoom: true }).setView([52.0, 12.0], 4);
+    map = L.map("map", { scrollWheelZoom: true, worldCopyJump: true }).setView([52, 12], 4);
+    // Opens focused on Europe; international events are still on the map when you zoom out.
 
     // Painterly Stamen Watercolor basemap (hosted by Stadia Maps).
     // Works key-free on localhost; for production add your domain in the free
@@ -134,7 +169,7 @@
         '<p class="popup-meta">' + escapeHtml(TYPE_LABELS[ev.type] || ev.type) +
         " · " + escapeHtml(ev.city) + ", " + escapeHtml(ev.country) + "<br>" +
         escapeHtml(formatDateRange(ev)) + "</p>" +
-        (ev.link ? '<a class="popup-link" href="' + escapeHtml(ev.link) +
+        (safeUrl(ev.link) ? '<a class="popup-link" href="' + escapeHtml(safeUrl(ev.link)) +
           '" target="_blank" rel="noopener">Event details →</a>' : "")
       );
       markersById[ev.id] = m;
@@ -143,11 +178,25 @@
   }
 
   // ---- Event list ----
+  function isLocated(ev) {
+    return typeof ev.lat === "number" && isFinite(ev.lat) &&
+           typeof ev.lng === "number" && isFinite(ev.lng);
+  }
+
   function eventCardHtml(ev) {
     var badges = '<span class="badge type">' +
       escapeHtml(TYPE_LABELS[ev.type] || ev.type) + "</span>";
     if (ev.featured) badges += '<span class="badge featured">Featured</span>';
     if (isSoon(ev)) badges += '<span class="badge soon">Soon</span>';
+    if (!isLocated(ev)) badges += '<span class="badge tbc">Location to be confirmed</span>';
+
+    var facs = facilitatorsForEvent(ev);
+    var facHtml = facs.length
+      ? '<p class="event-facs">With ' + facs.map(function (f) {
+          return '<a class="fac-chip" href="#facilitators-section" data-fac="' +
+            escapeHtml(f.id) + '">' + escapeHtml(f.name) + "</a>";
+        }).join(", ") + "</p>"
+      : "";
 
     return (
       '<article class="event-card' + (ev.featured ? " featured" : "") +
@@ -155,10 +204,10 @@
       '<div class="badges">' + badges + "</div>" +
       "<h3>" + escapeHtml(ev.title) + "</h3>" +
       '<p class="event-meta">' + escapeHtml(formatDateRange(ev)) + " · " +
-      escapeHtml(ev.venue ? ev.venue + ", " : "") + escapeHtml(ev.city) + ", " +
-      escapeHtml(ev.country) + "</p>" +
+      escapeHtml([ev.venue, ev.city, ev.country].filter(Boolean).join(", ")) + "</p>" +
       '<p class="event-desc">' + escapeHtml(ev.description || "") + "</p>" +
-      (ev.link ? '<a class="event-link" href="' + escapeHtml(ev.link) +
+      facHtml +
+      (safeUrl(ev.link) ? '<a class="event-link" href="' + escapeHtml(safeUrl(ev.link)) +
         '" target="_blank" rel="noopener">Event details →</a>' : "") +
       "</article>"
     );
@@ -190,6 +239,21 @@
         if (e.key === "Enter") focusMarker();
       });
     });
+
+    // clicking a facilitator chip jumps to that facilitator's profile
+    Array.prototype.forEach.call(list.querySelectorAll(".fac-chip"), function (a) {
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        showView("facilitators");
+        var card = document.getElementById("fac-" + a.getAttribute("data-fac"));
+        if (card) {
+          card.scrollIntoView({ behavior: "smooth", block: "center" });
+          card.classList.add("fac-flash");
+          setTimeout(function () { card.classList.remove("fac-flash"); }, 1500);
+        }
+      });
+    });
   }
 
   // ---- Filtering ----
@@ -200,7 +264,15 @@
     var month = document.getElementById("filter-month").value;
     var soonOnly = document.getElementById("filter-soon").checked;
 
+    // when a facilitator is selected, restrict to the events they're linked to
+    var facLinks = null;
+    if (facilitatorFilter) {
+      var fac = allFacilitators.filter(function (f) { return f.id === facilitatorFilter; })[0];
+      facLinks = fac ? (fac.event_links || []).map(normLink) : [];
+    }
+
     var filtered = allEvents.filter(function (ev) {
+      if (facLinks && (!ev.link || facLinks.indexOf(normLink(ev.link)) === -1)) return false;
       if (isPast(ev)) return false;
       if (type && ev.type !== type) return false;
       if (country && ev.country !== country) return false;
@@ -255,31 +327,154 @@
     });
   }
 
+  // ---- "Happening soon" strip ----
+  function focusEvent(ev) {
+    if (typeof ev.lat !== "number" || typeof ev.lng !== "number") return;
+    map.setView([ev.lat, ev.lng], 8, { animate: true });
+    var m = markersById[ev.id];
+    if (m) {
+      clusterGroup.zoomToShowLayer(m, function () { m.openPopup(); });
+    }
+  }
+
+  function renderSoonStrip() {
+    var wrap = document.getElementById("soon-wrap");
+    var strip = document.getElementById("soon-strip");
+    if (!wrap || !strip) return;
+    // only events that haven't started yet (already-started ones stay on the map,
+    // but it's odd to headline them as "happening soon")
+    var upcoming = allEvents.filter(function (e) { return daysUntil(e.start_date) >= 0; });
+    upcoming.sort(function (a, b) { return daysUntil(a.start_date) - daysUntil(b.start_date); });
+    var soon = upcoming.slice(0, 8);
+    if (!soon.length) { wrap.hidden = true; return; }
+    wrap.hidden = false;
+
+    strip.innerHTML = soon.map(function (ev) {
+      var du = daysUntil(ev.start_date);
+      var when = du <= 0 ? "Today" : (du === 1 ? "Tomorrow" : "in " + du + " days");
+      return (
+        '<button class="soon-card" data-id="' + escapeHtml(ev.id) + '" type="button">' +
+        '<span class="soon-when">' + escapeHtml(when) + "</span>" +
+        '<span class="soon-name">' + escapeHtml(ev.title) + "</span>" +
+        '<span class="soon-place">' + escapeHtml([ev.city, ev.country].filter(Boolean).join(", ")) + "</span>" +
+        '<span class="badge type">' + escapeHtml(TYPE_LABELS[ev.type] || ev.type) + "</span>" +
+        "</button>"
+      );
+    }).join("");
+
+    Array.prototype.forEach.call(strip.querySelectorAll(".soon-card"), function (card) {
+      card.addEventListener("click", function () {
+        var ev = allEvents.filter(function (e) { return e.id === card.getAttribute("data-id"); })[0];
+        if (ev) {
+          showView("events");
+          focusEvent(ev);
+          document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      });
+    });
+  }
+
   // ---- Facilitators ----
-  function renderFacilitators(list) {
+  function renderFacilitators() {
     var grid = document.getElementById("facilitator-grid");
-    if (!list || !list.length) {
+    if (!grid) return;
+    if (!allFacilitators.length) {
       grid.innerHTML = '<div class="empty-state">No facilitators listed yet.</div>';
       return;
     }
+    var list = allFacilitators.slice().sort(function (a, b) {
+      return (a.name || "").localeCompare(b.name || "");
+    });
     grid.innerHTML = list.map(function (f) {
       var initials = (f.name || "?").split(/\s+/).map(function (w) { return w[0]; })
         .slice(0, 2).join("").toUpperCase();
       var mods = (f.modalities || []).map(function (m) {
         return '<span class="badge">' + escapeHtml(m) + "</span>";
       }).join("");
+      var avatar = f.photo
+        ? '<img class="avatar avatar-img" src="' + escapeHtml(f.photo) +
+          '" alt="' + escapeHtml(f.name) + '" loading="lazy" />'
+        : '<div class="avatar">' + escapeHtml(initials) + "</div>";
+
+      var n = eventsForFacilitator(f).length;
+      var cta = n
+        ? '<p class="fac-cta">See ' + n + " event" + (n > 1 ? "s" : "") +
+          " on the map →</p>"
+        : "";
+
       return (
-        '<article class="facilitator-card">' +
-        '<div class="avatar">' + escapeHtml(initials) + "</div>" +
-        "<h3>" + escapeHtml(f.name) + "</h3>" +
+        '<article class="facilitator-card' + (n ? " is-clickable" : "") +
+        '" id="fac-' + escapeHtml(f.id) + '" data-fac-id="' + escapeHtml(f.id) +
+        '"' + (n ? ' tabindex="0" role="button"' : "") + ">" +
+        avatar +
+        "<h3>" + escapeHtml(f.name) +
+          (f.pronouns ? ' <span class="fac-pronouns">' + escapeHtml(f.pronouns) + "</span>" : "") +
+          "</h3>" +
         '<p class="loc">' + escapeHtml(f.location || "") + "</p>" +
         '<p class="bio">' + escapeHtml(f.bio_short || "") + "</p>" +
         '<div class="mods">' + mods + "</div>" +
-        (f.website ? '<a class="event-link" href="' + escapeHtml(f.website) +
+        cta +
+        (safeUrl(f.website) ? '<a class="event-link" href="' + escapeHtml(safeUrl(f.website)) +
           '" target="_blank" rel="noopener">Visit website →</a>' : "") +
         "</article>"
       );
     }).join("");
+
+    // clicking a facilitator card filters the map/list to that person's events
+    Array.prototype.forEach.call(grid.querySelectorAll(".facilitator-card.is-clickable"), function (card) {
+      function go(e) {
+        if (e.target.tagName === "A") return;  // let the website link work
+        setFacilitatorFilter(card.getAttribute("data-fac-id"));
+      }
+      card.addEventListener("click", go);
+      card.addEventListener("keydown", function (e) { if (e.key === "Enter") go(e); });
+    });
+  }
+
+  // ---- Facilitator → map filter ----
+  function setFacilitatorFilter(id) {
+    facilitatorFilter = id;
+    showView("events");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    applyFilters();
+    updateFacChip();
+    fitToFacilitator();
+  }
+
+  function clearFacilitatorFilter() {
+    facilitatorFilter = null;
+    applyFilters();
+    updateFacChip();
+  }
+
+  function updateFacChip() {
+    var bar = document.getElementById("fac-filter-bar");
+    if (!facilitatorFilter) { if (bar) bar.parentNode.removeChild(bar); return; }
+    var fac = allFacilitators.filter(function (f) { return f.id === facilitatorFilter; })[0];
+    var name = fac ? fac.name : "this facilitator";
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.id = "fac-filter-bar";
+      bar.className = "fac-filter-bar";
+      var filters = document.querySelector(".filters");
+      filters.parentNode.insertBefore(bar, filters);
+    }
+    bar.innerHTML = 'Showing events with <strong>' + escapeHtml(name) +
+      '</strong> <button type="button" class="fac-clear">show all ✕</button>';
+    bar.querySelector(".fac-clear").addEventListener("click", clearFacilitatorFilter);
+  }
+
+  function fitToFacilitator() {
+    if (!map || typeof map.fitBounds !== "function") return;
+    var fac = allFacilitators.filter(function (f) { return f.id === facilitatorFilter; })[0];
+    if (!fac) return;
+    var links = (fac.event_links || []).map(normLink);
+    var pts = allEvents.filter(function (ev) {
+      return ev.link && links.indexOf(normLink(ev.link)) !== -1 &&
+        typeof ev.lat === "number" && typeof ev.lng === "number";
+    }).map(function (ev) { return [ev.lat, ev.lng]; });
+    if (pts.length === 1) map.setView(pts[0], 7, { animate: true });
+    else if (pts.length > 1) map.fitBounds(pts, { padding: [40, 40], maxZoom: 8 });
   }
 
   // ---- Navigation (tabs) ----
@@ -305,6 +500,22 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
       });
     });
+
+    // Clicking the logo / title returns to the landing state (like a refresh).
+    var brand = document.querySelector(".brand");
+    if (brand) {
+      brand.addEventListener("click", function (e) {
+        e.preventDefault();
+        ["search", "filter-type", "filter-country", "filter-month"].forEach(function (id) {
+          document.getElementById(id).value = "";
+        });
+        document.getElementById("filter-soon").checked = false;
+        applyFilters();
+        showView("events");
+        if (map) map.setView([52, 12], 4);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
   }
 
   // ---- Contribute form ----
@@ -313,16 +524,258 @@
     var note = document.getElementById("form-note");
     if (!form) return;
     form.addEventListener("submit", function (e) {
-      // If the Formspree endpoint isn't configured yet, intercept and explain.
-      if (form.getAttribute("action").indexOf("YOUR_FORM_ID") !== -1) {
-        e.preventDefault();
+      e.preventDefault();
+      note.style.color = "";
+      note.textContent = "Sending…";
+      var body = new URLSearchParams(new FormData(form)).toString();
+      fetch("/", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: body
+      }).then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        form.reset();
+        note.style.color = "var(--moss)";
+        note.textContent = "Thank you! Your submission was received — we review everything before it appears on the map.";
+      }).catch(function () {
         note.style.color = "#b4521f";
-        note.textContent = "Form not connected yet — see README to add a free Formspree/Netlify endpoint. Your details were not sent.";
-      } else {
-        note.style.color = "";
-        note.textContent = "Sending…";
-      }
+        note.textContent = "Hmm, that didn't send. Please try again, or email us.";
+      });
     });
+  }
+
+  // ---- Road-trip planner ----
+  function haversineKm(aLat, aLng, bLat, bLng) {
+    var R = 6371, toR = Math.PI / 180;
+    var dLat = (bLat - aLat) * toR, dLng = (bLng - aLng) * toR;
+    var s = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(aLat * toR) * Math.cos(bLat * toR) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * R * Math.asin(Math.sqrt(s));
+  }
+
+  function segDistKm(pLat, pLng, aLat, aLng, bLat, bLng) {
+    // local equirectangular projection to km, then point-to-segment distance
+    var refLat = ((aLat + bLat) / 2) * Math.PI / 180;
+    var kx = 111.32 * Math.cos(refLat), ky = 110.57;
+    var ax = aLng * kx, ay = aLat * ky, bx = bLng * kx, by = bLat * ky, px = pLng * kx, py = pLat * ky;
+    var dx = bx - ax, dy = by - ay, len2 = dx * dx + dy * dy;
+    var t = len2 ? ((px - ax) * dx + (py - ay) * dy) / len2 : 0;
+    t = Math.max(0, Math.min(1, t));
+    var cx = ax + t * dx, cy = ay + t * dy;
+    return Math.sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy));
+  }
+
+  function daysBetween(a, b) {
+    var pa = parseDate(a), pb = parseDate(b);
+    return (pa && pb) ? Math.round((pb - pa) / 86400000) : 0;
+  }
+
+  function bearingDeg(aLat, aLng, bLat, bLng) {
+    var toR = Math.PI / 180;
+    var y = Math.sin((bLng - aLng) * toR) * Math.cos(bLat * toR);
+    var x = Math.cos(aLat * toR) * Math.sin(bLat * toR) -
+      Math.sin(aLat * toR) * Math.cos(bLat * toR) * Math.cos((bLng - aLng) * toR);
+    return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;  // 0=N, 90=E, 180=S, 270=W
+  }
+
+  function geocodePlace(q) {
+    return fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + encodeURIComponent(q))
+      .then(function (r) { return r.json(); })
+      .then(function (h) {
+        if (h && h[0]) return [parseFloat(h[0].lat), parseFloat(h[0].lon)];
+        throw new Error("not found");
+      });
+  }
+
+  // travel days needed for a leg: 1 normally, 2 if it's a long hop (>700 km)
+  function travelDaysFor(km) { return km > 700 ? 2 : 1; }
+
+  // Driving-route check via the Netlify function (ORS). Degrades gracefully: if the
+  // function isn't deployed yet, legs come back "unavailable" and we fall back to
+  // straight-line distance with no driveability filtering.
+  function routeLeg(a, b) {
+    return fetch("/.netlify/functions/route?from=" + a[1] + "," + a[0] + "&to=" + b[1] + "," + b[0])
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .catch(function () { return { unavailable: true }; });
+  }
+  function formatDur(min) {
+    if (min == null) return "";
+    var h = Math.floor(min / 60), m = Math.round(min % 60);
+    return h ? (h + "h" + (m ? " " + m + "m" : "")) : (m + "m");
+  }
+  // Walk the itinerary, routing each leg; drop stops that aren't drivable from the
+  // previous one. Calls done(driveableStops, endLeg) when finished.
+  function validateDriveable(start, end, stops, done) {
+    var out = [], prev = start, i = 0;
+    function step() {
+      if (i >= stops.length) { routeLeg(prev, end).then(function (eleg) { done(out, eleg); }); return; }
+      var s = stops[i++];
+      routeLeg(prev, [s.lat, s.lng]).then(function (leg) {
+        if (leg && leg.ok) {
+          s._km = Math.round(leg.km); s._min = Math.round(leg.min); out.push(s); prev = [s.lat, s.lng];
+        } else if (leg && leg.unavailable) {  // routing not available -> straight-line fallback
+          s._km = Math.round(haversineKm(prev[0], prev[1], s.lat, s.lng)); s._min = null; out.push(s); prev = [s.lat, s.lng];
+        }  // leg.ok === false -> not drivable -> skip this stop, keep prev
+        step();
+      });
+    }
+    step();
+  }
+
+  // orientation + proper segment-crossing test (points are [lat, lng]; x=lng, y=lat)
+  function orient(a, b, c) {
+    return (b[1] - a[1]) * (c[0] - a[0]) - (b[0] - a[0]) * (c[1] - a[1]);
+  }
+  function properCross(p1, p2, p3, p4) {
+    var d1 = orient(p3, p4, p1), d2 = orient(p3, p4, p2),
+        d3 = orient(p1, p2, p3), d4 = orient(p1, p2, p4);
+    if (d1 === 0 || d2 === 0 || d3 === 0 || d4 === 0) return false;  // touching/collinear isn't a crossing
+    return ((d1 > 0) !== (d2 > 0)) && ((d3 > 0) !== (d4 > 0));
+  }
+
+  // Build a realistic sequence: each next festival must start AFTER the previous
+  // one ends, plus travel days (1, or 2 for long hops), AND the new leg must not
+  // cross a leg already in the route — so the trip flows forward, not zig-zagging.
+  function buildItinerary(cands, start, end) {
+    var out = [], legs = [], prevPt = start, prev = null;
+    for (var i = 0; i < cands.length; i++) {
+      var ev = cands[i], pt = [ev.lat, ev.lng];
+      if (prev) {
+        var km = haversineKm(prev.lat, prev.lng, ev.lat, ev.lng);
+        var needGap = travelDaysFor(km) + 1;  // end -> next start gap (1 travel day => gap 2)
+        if (daysBetween(prev.end_date || prev.start_date, ev.start_date) < needGap) continue;
+      }
+      var crosses = false;
+      for (var j = 0; j < legs.length - 1; j++) {  // skip the adjacent (last) leg
+        if (properCross(prevPt, pt, legs[j][0], legs[j][1])) { crosses = true; break; }
+      }
+      if (crosses) continue;
+      out.push(ev);
+      legs.push([prevPt, pt]);
+      prevPt = pt;
+      prev = ev;
+    }
+    // the closing leg back to end/home must also not cross the route (matters most
+    // for loop trips where End = Start) — trim trailing stops that would force it
+    while (out.length) {
+      var bad = false;
+      for (var k = 0; k < legs.length - 1; k++) {
+        if (properCross(legs[legs.length - 1][1], end, legs[k][0], legs[k][1])) { bad = true; break; }
+      }
+      if (!bad) break;
+      out.pop();
+      legs.pop();
+    }
+    return out;
+  }
+
+  function planTrip() {
+    var startQ = document.getElementById("trip-start").value.trim();
+    var endQ = document.getElementById("trip-end").value.trim() || startQ;
+    var fromD = document.getElementById("trip-from").value;
+    var toD = document.getElementById("trip-to").value;
+    var corridor = +document.getElementById("trip-corridor").value;
+    var dir = document.getElementById("trip-dir").value;  // "", or bearing 0/90/180/270
+    var status = document.getElementById("trip-status");
+    if (!startQ || !fromD || !toD) { status.textContent = "Please fill in start, from and to."; return; }
+    if (fromD > toD) { status.textContent = "‘From’ is after ‘To’ — check the dates."; return; }
+    status.textContent = "Finding your route…";
+    Promise.all([geocodePlace(startQ), geocodePlace(endQ)]).then(function (res) {
+      var start = res[0], end = res[1];
+      var isLoop = haversineKm(start[0], start[1], end[0], end[1]) < 30;
+      var candidates = allEvents.filter(function (ev) {
+        if (!isLocated(ev)) return false;
+        var s = ev.start_date, e = ev.end_date || ev.start_date;
+        if (s < fromD || s > toD) return false;          // must START within the window
+        if (daysBetween(e, toD) < 1) return false;       // must END >=1 day before the trip ends
+        if (segDistKm(ev.lat, ev.lng, start[0], start[1], end[0], end[1]) > corridor) return false;
+        if (dir !== "" && isLoop) {                       // bias a loop toward a chosen direction
+          var b = bearingDeg(start[0], start[1], ev.lat, ev.lng);
+          var diff = Math.abs(b - (+dir)); diff = Math.min(diff, 360 - diff);
+          if (diff > 90) return false;
+        }
+        return true;
+      }).sort(function (a, b) { return a.start_date < b.start_date ? -1 : (a.start_date > b.start_date ? 1 : 0); });
+      var geo = buildItinerary(candidates, start, end);
+      status.textContent = "Checking driving routes…";
+      validateDriveable(start, end, geo, function (stops, endLeg) {
+        var skipped = candidates.length - stops.length;
+        drawTrip(start, end, stops, startQ, endQ);
+        renderItinerary(start, end, stops, endLeg);
+        status.textContent = stops.length
+          ? (stops.length + " festival" + (stops.length > 1 ? "s" : "") + " you can drive in sequence" +
+             (skipped > 0 ? " · " + skipped + " more nearby didn't fit (timing, route or backtracking)" : ""))
+          : "No festivals fit a drivable schedule here — try a wider detour or longer window.";
+      });
+    }).catch(function () {
+      status.textContent = "Couldn't find one of those places — try ‘City, Country’.";
+    });
+  }
+
+  function drawTrip(start, end, stops, startName, endName) {
+    if (!map) return;
+    if (tripLayer) map.removeLayer(tripLayer);
+    if (clusterGroup) clusterGroup.clearLayers();
+    tripLayer = L.layerGroup().addTo(map);
+    var pts = [start].concat(stops.map(function (s) { return [s.lat, s.lng]; })).concat([end]);
+    L.polyline(pts, { color: "#d2613f", weight: 3, dashArray: "6 8", opacity: 0.85 }).addTo(tripLayer);
+    L.marker(start).addTo(tripLayer).bindPopup("Start: " + escapeHtml(startName));
+    if (normLink(endName) !== normLink(startName))
+      L.marker(end).addTo(tripLayer).bindPopup("End: " + escapeHtml(endName));
+    stops.forEach(function (s, i) {
+      var icon = L.divIcon({ className: "trip-pin", html: '<div class="trip-num">' + (i + 1) + "</div>",
+        iconSize: [26, 26], iconAnchor: [13, 13] });
+      L.marker([s.lat, s.lng], { icon: icon }).addTo(tripLayer)
+        .bindPopup("<b>" + escapeHtml(s.title) + "</b><br>" + escapeHtml(formatDateRange(s)));
+    });
+    if (pts.length && typeof map.fitBounds === "function") map.fitBounds(pts, { padding: [40, 40] });
+  }
+
+  function renderItinerary(start, end, stops, endLeg) {
+    var list = document.getElementById("event-list");
+    document.getElementById("result-count").textContent = stops.length + (stops.length === 1 ? " stop" : " stops");
+    if (!stops.length) {
+      list.innerHTML = '<div class="empty-state">No festivals on this route in these dates.<br>Try a wider detour or a longer date window.</div>';
+      return;
+    }
+    var total = 0, html = "";
+    for (var i = 0; i < stops.length; i++) {
+      var s = stops[i];
+      var km = (s._km != null) ? s._km : 0;
+      total += km;
+      var dur = (s._min != null) ? " · ~" + formatDur(s._min) + " drive" : "";
+      var leg = km + " km from " + (i === 0 ? "start" : "previous") + dur;
+      html += '<article class="event-card">' +
+        '<div class="badges"><span class="badge type">Stop ' + (i + 1) + "</span></div>" +
+        "<h3>" + escapeHtml(s.title) + "</h3>" +
+        '<p class="event-meta">' + escapeHtml(formatDateRange(s)) + " · " +
+        escapeHtml([s.city, s.country].filter(Boolean).join(", ")) + "</p>" +
+        '<p class="event-desc">' + leg + "</p>" +
+        (safeUrl(s.link) ? '<a class="event-link" href="' + escapeHtml(safeUrl(s.link)) +
+          '" target="_blank" rel="noopener">Event details →</a>' : "") +
+        "</article>";
+    }
+    if (endLeg && endLeg.ok) total += Math.round(endLeg.km);
+    else { var ls = stops[stops.length - 1]; total += Math.round(haversineKm(ls.lat, ls.lng, end[0], end[1])); }
+    list.innerHTML = '<div class="trip-summary">' + stops.length + " stops · ~" + total + " km driving</div>" + html;
+  }
+
+  function clearTrip() {
+    if (tripLayer) { map.removeLayer(tripLayer); tripLayer = null; }
+    document.getElementById("trip-status").textContent = "";
+    applyFilters();  // restore normal markers + list
+  }
+
+  function initTrip() {
+    var toggle = document.getElementById("trip-toggle"), panel = document.getElementById("trip-panel");
+    if (!toggle) return;
+    toggle.addEventListener("click", function () {
+      panel.hidden = !panel.hidden;
+      toggle.classList.toggle("open", !panel.hidden);
+      if (!panel.hidden && map) setTimeout(function () { map.invalidateSize(); }, 50);
+    });
+    document.getElementById("trip-plan").addEventListener("click", planTrip);
+    document.getElementById("trip-clear").addEventListener("click", clearTrip);
   }
 
   // ---- Data loading ----
@@ -337,6 +790,7 @@
     initMap();
     initNav();
     initForm();
+    initTrip();
 
     // filter listeners
     ["search", "filter-type", "filter-country"].forEach(function (id) {
@@ -347,10 +801,14 @@
 
     loadJSON("data/events.json")
       .then(function (data) {
-        allEvents = (data.events || []).filter(function (e) { return e && e.id; });
+        allEvents = (data.events || []).filter(function (e) {
+          return e && e.id && e.source !== "sample";  // hide seed/example events
+        });
         populateCountryFilter();
         populateMonthFilter();
         applyFilters();
+        renderSoonStrip();
+        renderFacilitators();  // facilitator cards list their events once events are known
       })
       .catch(function (err) {
         document.getElementById("event-list").innerHTML =
@@ -359,8 +817,12 @@
       });
 
     loadJSON("data/facilitators.json")
-      .then(function (data) { renderFacilitators(data.facilitators || []); })
-      .catch(function () { renderFacilitators([]); });
+      .then(function (data) {
+        allFacilitators = data.facilitators || [];
+        renderFacilitators();
+        applyFilters();  // event cards pick up facilitator chips once facilitators are known
+      })
+      .catch(function () { allFacilitators = []; renderFacilitators(); });
   }
 
   if (document.readyState === "loading") {
