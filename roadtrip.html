@@ -97,6 +97,10 @@
     function bearingDeg(aLat,aLng,bLat,bLng){ var r=Math.PI/180, y=Math.sin((bLng-aLng)*r)*Math.cos(bLat*r);
       var x=Math.cos(aLat*r)*Math.sin(bLat*r)-Math.sin(aLat*r)*Math.cos(bLat*r)*Math.cos((bLng-aLng)*r);
       return (Math.atan2(y,x)*180/Math.PI+360)%360; }
+    function destPoint(lat,lng,d,brg){ var R=6371,r=Math.PI/180,br=brg*r,la1=lat*r,lo1=lng*r,dr=d/R;
+      var la2=Math.asin(Math.sin(la1)*Math.cos(dr)+Math.cos(la1)*Math.sin(dr)*Math.cos(br));
+      var lo2=lo1+Math.atan2(Math.sin(br)*Math.sin(dr)*Math.cos(la1),Math.cos(dr)-Math.sin(la1)*Math.sin(la2));
+      return [la2/r,((lo2/r)+540)%360-180]; }
     function orient(a,b,c){ return (b[1]-a[1])*(c[0]-a[0])-(b[0]-a[0])*(c[1]-a[1]); }
     function properCross(p1,p2,p3,p4){ var d1=orient(p3,p4,p1),d2=orient(p3,p4,p2),d3=orient(p1,p2,p3),d4=orient(p1,p2,p4);
       if(d1===0||d2===0||d3===0||d4===0) return false; return ((d1>0)!==(d2>0))&&((d3>0)!==(d4>0)); }
@@ -140,11 +144,13 @@
       st.textContent="Finding your route…";
       Promise.all([geocodePlace(sQ),geocodePlace(eQ)]).then(function(res){
         var start=res[0],end=res[1], isLoop=haversineKm(start[0],start[1],end[0],end[1])<30;
+        // for a loop with a chosen heading, aim the corridor at a virtual point in that
+        // direction (a forgiving strip) rather than a hard half-plane sector
+        var corrEnd=(isLoop&&dir!=="")?destPoint(start[0],start[1],900,+dir):end;
         var cands=allEvents.filter(function(ev){ if(!isLocated(ev)) return false;
           var s=ev.start_date,e=ev.end_date||ev.start_date;
           if(s<fD||s>tD) return false; if(daysBetween(e,tD)<1) return false;
-          if(segDistKm(ev.lat,ev.lng,start[0],start[1],end[0],end[1])>corr) return false;
-          if(dir!==""&&isLoop){ var b=bearingDeg(start[0],start[1],ev.lat,ev.lng),df=Math.abs(b-(+dir)); df=Math.min(df,360-df); if(df>90) return false; }
+          if(segDistKm(ev.lat,ev.lng,start[0],start[1],corrEnd[0],corrEnd[1])>corr) return false;
           return true; }).sort(function(a,b){ return a.start_date<b.start_date?-1:(a.start_date>b.start_date?1:0); });
         var geo=buildItinerary(cands,start,end);
         st.textContent="Checking driving routes…";
@@ -164,7 +170,7 @@
       events.forEach(function(ev){
         if(!isLocated(ev)) return;
         if(excludeIds && excludeIds[ev.id]) return;
-        L.circleMarker([ev.lat,ev.lng],{radius:5,color:"#fff",weight:1.5,fillColor:"#8fb09a",fillOpacity:.7})
+        L.circleMarker([ev.lat,ev.lng],{radius:6,color:"#fff",weight:2,fillColor:"#e8742e",fillOpacity:.9})
           .addTo(baseLayer).bindPopup("<b>"+esc(ev.title)+"</b><br>"+esc(fmtRange(ev))+"<br>"+esc([ev.city,ev.country].filter(Boolean).join(", ")));
       });
     }
