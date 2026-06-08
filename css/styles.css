@@ -124,7 +124,12 @@ body::after {
 .tagline { margin: 5px 0 0; color: var(--moss); font-size: 13.5px; font-weight: 600; }
 
 /* ---------- Events hero ---------- */
-.events-hero { padding: 14px 30px 0; max-width: 760px; }
+.events-hero {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; padding: 14px 30px 0;
+}
+.events-hero-text { max-width: 620px; }
+.trip-beta { font-size: 11px; font-weight: 700; letter-spacing: 0.3px; opacity: 0.85; margin-left: 4px; }
 .events-hero-title {
   margin: 0; font-family: var(--font-display); font-style: italic; font-weight: 600;
   font-size: clamp(20px, 2.6vw, 26px); line-height: 1.1; color: var(--forest);

@@ -74,7 +74,7 @@
   <script>
   (function () {
     "use strict";
-    var allEvents = [], map, tripLayer = null;
+    var allEvents = [], map, tripLayer = null, baseLayer = null;
     var TYPE_LABELS = { jam:"Jam", class:"Class", workshop:"Workshop", festival:"Festival", retreat:"Retreat" };
 
     function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -144,10 +144,23 @@
         st.textContent="Checking driving routes…";
         validateDriveable(start,end,geo,function(stops,endLeg){
           var skipped=cands.length-stops.length;
+          var routeIds={}; stops.forEach(function(s){ routeIds[s.id]=true; });
+          var winEvents=allEvents.filter(function(ev){ if(!isLocated(ev)) return false; var s=ev.start_date,e=ev.end_date||ev.start_date; return s<=tD&&e>=fD; });
+          showBaseEvents(winEvents, routeIds);  // other events in the period stay visible
           drawTrip(start,end,stops,sQ,eQ); renderItinerary(start,end,stops,endLeg);
           st.textContent=stops.length?(stops.length+" festival"+(stops.length>1?"s":"")+" you can drive in sequence"+(skipped>0?" · "+skipped+" more nearby didn't fit (timing, route or backtracking)":"")):"No festivals fit a drivable schedule here — try a wider detour or longer window.";
         });
       }).catch(function(){ st.textContent="Couldn't find one of those places — try ‘City, Country’."; });
+    }
+    function showBaseEvents(events, excludeIds){
+      if(!baseLayer) baseLayer=L.layerGroup().addTo(map);
+      baseLayer.clearLayers();
+      events.forEach(function(ev){
+        if(!isLocated(ev)) return;
+        if(excludeIds && excludeIds[ev.id]) return;
+        L.circleMarker([ev.lat,ev.lng],{radius:5,color:"#fff",weight:1.5,fillColor:"#8fb09a",fillOpacity:.7})
+          .addTo(baseLayer).bindPopup("<b>"+esc(ev.title)+"</b><br>"+esc(fmtRange(ev))+"<br>"+esc([ev.city,ev.country].filter(Boolean).join(", ")));
+      });
     }
     function drawTrip(start,end,stops,sN,eN){
       if(tripLayer) map.removeLayer(tripLayer); tripLayer=L.layerGroup().addTo(map);
@@ -176,10 +189,11 @@
     function val(id){ return document.getElementById(id).value.trim(); }
 
     map=L.map("map").setView([52,12],4);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{subdomains:"abcd",maxZoom:19,attribution:'&copy; OpenStreetMap &copy; CARTO'}).addTo(map);
+    L.tileLayer("https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}{r}.png",{maxZoom:18,attribution:'&copy; <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://stamen.com/" target="_blank">Stamen Design</a> &copy; OpenStreetMap'}).addTo(map);
     document.getElementById("trip-plan").addEventListener("click", planTrip);
     fetch("data/events.json").then(function(r){return r.json();}).then(function(d){
       allEvents=(d.events||[]).filter(function(e){ return e&&e.id&&e.source!=="sample"; });
+      showBaseEvents(allEvents);  // show every event on the map straight away
     }).catch(function(){ document.getElementById("trip-status").textContent="Couldn't load events."; });
   })();
   </script>
