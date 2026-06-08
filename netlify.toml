@@ -10,7 +10,7 @@
 
 [build]
   publish = "."
-  ignore = "git diff --quiet HEAD^ HEAD -- index.html roadtrip.html css js data assets netlify"
+  ignore = "git diff --quiet HEAD^ HEAD -- . ':!pipeline/state.json' ':!pipeline/geocode_cache.json'"
 
 [functions]
   directory = "netlify/functions"
