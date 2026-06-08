@@ -10,7 +10,7 @@
 
 [build]
   publish = "."
-  ignore = "git diff --quiet HEAD^ HEAD -- index.html css js data netlify"
+  ignore = "git diff --quiet HEAD^ HEAD -- index.html roadtrip.html css js data assets netlify"
 
 [functions]
   directory = "netlify/functions"
