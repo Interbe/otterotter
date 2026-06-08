@@ -125,11 +125,7 @@
       var out=[],prev=start,i=0;
       (function step(){ if(i>=stops.length){ routeLeg(prev,end).then(function(el){done(out,el);}); return; }
         var s=stops[i++]; routeLeg(prev,[s.lat,s.lng]).then(function(leg){
-          if(leg&&leg.ok){
-            var crow=haversineKm(prev[0],prev[1],s.lat,s.lng);
-            // skip stops only when DRIVING is a HUGE detour vs the straight line — i.e. a
-            // genuine sea go-around (Baltic etc.), not normal winding/bridge routes.
-            if(leg.km > crow*2.5 && (leg.km-crow) > 300){ step(); return; }
+          if(leg&&leg.ok){  // a real road route exists — keep it with the true driving distance
             s._km=Math.round(leg.km); s._min=Math.round(leg.min); out.push(s); prev=[s.lat,s.lng];
           }
           else if(leg&&leg.unavailable){ s._km=Math.round(haversineKm(prev[0],prev[1],s.lat,s.lng)); s._min=null; out.push(s); prev=[s.lat,s.lng]; }
@@ -144,13 +140,15 @@
       st.textContent="Finding your route…";
       Promise.all([geocodePlace(sQ),geocodePlace(eQ)]).then(function(res){
         var start=res[0],end=res[1], isLoop=haversineKm(start[0],start[1],end[0],end[1])<30;
-        // for a loop with a chosen heading, aim the corridor at a virtual point in that
-        // direction (a forgiving strip) rather than a hard half-plane sector
-        var corrEnd=(isLoop&&dir!=="")?destPoint(start[0],start[1],900,+dir):end;
         var cands=allEvents.filter(function(ev){ if(!isLocated(ev)) return false;
           var s=ev.start_date,e=ev.end_date||ev.start_date;
-          if(s<fD||s>tD) return false; if(daysBetween(e,tD)<1) return false;
-          if(segDistKm(ev.lat,ev.lng,start[0],start[1],corrEnd[0],corrEnd[1])>corr) return false;
+          if(s<fD||s>tD) return false;            // must START within the window
+          if(daysBetween(e,tD)<1) return false;   // must END >=1 day before the trip ends
+          if(segDistKm(ev.lat,ev.lng,start[0],start[1],end[0],end[1])>corr) return false;  // within detour of the route (loop = radius from home)
+          if(isLoop&&dir!==""){                    // and roughly in the chosen heading
+            var b=bearingDeg(start[0],start[1],ev.lat,ev.lng),df=Math.abs(b-(+dir)); df=Math.min(df,360-df);
+            if(df>60) return false;
+          }
           return true; }).sort(function(a,b){ return a.start_date<b.start_date?-1:(a.start_date>b.start_date?1:0); });
         var geo=buildItinerary(cands,start,end);
         st.textContent="Checking driving routes…";
