@@ -127,9 +127,9 @@
         var s=stops[i++]; routeLeg(prev,[s.lat,s.lng]).then(function(leg){
           if(leg&&leg.ok){
             var crow=haversineKm(prev[0],prev[1],s.lat,s.lng);
-            // skip stops whose DRIVING distance is a big detour vs the straight line
-            // (e.g. a sea crossing that the roads have to go all the way around)
-            if(leg.km > crow*1.7 && (leg.km-crow) > 150){ step(); return; }
+            // skip stops only when DRIVING is a HUGE detour vs the straight line — i.e. a
+            // genuine sea go-around (Baltic etc.), not normal winding/bridge routes.
+            if(leg.km > crow*2.5 && (leg.km-crow) > 300){ step(); return; }
             s._km=Math.round(leg.km); s._min=Math.round(leg.min); out.push(s); prev=[s.lat,s.lng];
           }
           else if(leg&&leg.unavailable){ s._km=Math.round(haversineKm(prev[0],prev[1],s.lat,s.lng)); s._min=null; out.push(s); prev=[s.lat,s.lng]; }
