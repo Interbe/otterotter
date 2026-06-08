@@ -1,9 +1,10 @@
 {
-  "_comment": "Facilitator profiles for Otterotter. 'photo' is a path under assets/facilitators/. 'modalities' are the 'Meet me at' tags. 'event_links' links a facilitator to events: paste the exact event website link(s) (the same URL shown on the event) into the array, and the site cross-links the facilitator and those events both ways. Example: \"event_links\": [\"https://contactfestival.de/\"].",
+  "_comment": "Facilitator profiles for Otterotter. 'photo' is a path under assets/facilitators/. 'pronouns' shows in small letters after the name (e.g. \"she/her\", \"they/them\", \"he/him\"); leave \"\" to hide. 'modalities' are the 'Meet me at' tags. 'event_links' links a facilitator to events: paste the exact event website link(s) (the same URL shown on the event) into the array, and the site cross-links the facilitator and those events both ways. Example: \"event_links\": [\"https://contactfestival.de/\"].",
   "facilitators": [
     {
       "id": "dorte-bjerre-jensen",
       "name": "Dorte Bjerre Jensen",
+      "pronouns": "she/her",
       "bio_short": "Dancer, performer, researcher, facilitator and therapist with a background in football and taekwondo. Her contact improvisation practice is rooted in bodily awareness and deep listening — to others and to oneself.",
       "location": "",
       "modalities": ["Contact Improvisation"],
@@ -14,6 +15,7 @@
     {
       "id": "sebastian-grubb",
       "name": "Sebastian Grubb",
+      "pronouns": "he/him",
       "bio_short": "Award-winning movement coach and dance artist based between Copenhagen and California. Founder of Agile Beast and co-founder of Spiral Camp, he teaches integrated movement to dancers, athletes and people of all kinds.",
       "location": "Copenhagen, Denmark & California, USA",
       "modalities": ["Contact Improvisation", "Beväg", "Stärk"],
@@ -24,6 +26,7 @@
     {
       "id": "maja-ejrnaes",
       "name": "Maja Ejrnæs",
+      "pronouns": "she/her",
       "bio_short": "Dancer drawn to improvisation over fixed choreography. Her classes work with principles and scores — touch, weight-sharing, friction, gravity and momentum — guided by trust and curiosity.",
       "location": "",
       "modalities": ["Contact Improvisation"],
