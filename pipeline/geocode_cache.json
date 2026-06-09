@@ -930,5 +930,21 @@
   "il mulino, il mulino, italy": {
     "lat": 43.2814337,
     "lng": 11.968759
+  },
+  "trstenice, czechia": {
+    "lat": 48.9882474,
+    "lng": 16.1977922
+  },
+  "montecito, montecito, argentina": {
+    "lat": null,
+    "lng": null
+  },
+  "near frome, united kingdom": {
+    "lat": null,
+    "lng": null
+  },
+  "studio burdąg, studio burdąg, poland": {
+    "lat": null,
+    "lng": null
   }
 }
