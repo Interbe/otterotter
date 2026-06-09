@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 110" role="img" aria-label="Otterotter">
+  <defs>
+    <linearGradient id="c" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0a07f"/><stop offset="1" stop-color="#d2613f"/></linearGradient>
+    <linearGradient id="m" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9cbcaa"/><stop offset="1" stop-color="#4f7a62"/></linearGradient>
+  </defs>
+  <rect width="130" height="110" rx="22" fill="#fbf6ee"/>
+  <g>
+    <path d="M40 86 Q 22 92 14 84" fill="none" stroke="url(#c)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M46 88 C 30 78 26 54 34 38 C 38 30 46 30 49 36 C 44 50 44 70 52 84 Z" fill="url(#c)"/>
+    <path d="M43 44 Q 56 44 63 50" fill="none" stroke="url(#c)" stroke-width="6.5" stroke-linecap="round"/>
+    <path d="M48 86 Q 50 95 57 97" fill="none" stroke="url(#c)" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="33" cy="31" r="9.5" fill="url(#c)"/>
+    <circle cx="27" cy="24" r="3" fill="url(#c)"/><circle cx="37" cy="23" r="3" fill="url(#c)"/>
+    <ellipse cx="30" cy="34" rx="4.2" ry="3.1" fill="#fff" opacity="0.92"/><circle cx="31" cy="30" r="1.6" fill="#3a2f28"/>
+  </g>
+  <g transform="translate(130,0) scale(-1,1)">
+    <path d="M40 86 Q 22 92 14 84" fill="none" stroke="url(#m)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M46 88 C 30 78 26 54 34 38 C 38 30 46 30 49 36 C 44 50 44 70 52 84 Z" fill="url(#m)"/>
+    <path d="M43 44 Q 56 44 63 50" fill="none" stroke="url(#m)" stroke-width="6.5" stroke-linecap="round"/>
+    <path d="M48 86 Q 50 95 57 97" fill="none" stroke="url(#m)" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="33" cy="31" r="9.5" fill="url(#m)"/>
+    <circle cx="27" cy="24" r="3" fill="url(#m)"/><circle cx="37" cy="23" r="3" fill="url(#m)"/>
+    <ellipse cx="30" cy="34" rx="4.2" ry="3.1" fill="#fff" opacity="0.92"/><circle cx="31" cy="30" r="1.6" fill="#3a2f28"/>
+  </g>
+  <circle cx="65" cy="52" r="4.6" fill="#b9a7d8"/>
+</svg>

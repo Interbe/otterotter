@@ -1,0 +1,5 @@
+# Otterotter — open to all crawlers (search engines & AI assistants welcome)
+User-agent: *
+Allow: /
+
+Sitemap: https://otterotter.org/sitemap.xml

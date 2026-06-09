@@ -386,6 +386,7 @@ body::after {
 }
 .facilitator-card:hover { transform: translateY(-4px) rotate(0.5deg); }
 .facilitator-card h3 { margin: 0 0 3px; font-family: var(--font-display); font-style: italic; font-weight: 600; font-size: 19px; color: var(--forest); }
+.facilitator-card h3 .fac-pronouns { font-family: var(--font-body); font-style: normal; font-weight: 600; font-size: 12px; color: var(--muted); letter-spacing: .02em; }
 .facilitator-card .loc { color: var(--muted); font-size: 13px; margin: 0 0 12px; font-weight: 600; }
 .facilitator-card .bio { font-size: 14px; margin: 0 0 14px; }
 .facilitator-card .mods { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }

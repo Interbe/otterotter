@@ -407,7 +407,9 @@
         '" id="fac-' + escapeHtml(f.id) + '" data-fac-id="' + escapeHtml(f.id) +
         '"' + (n ? ' tabindex="0" role="button"' : "") + ">" +
         avatar +
-        "<h3>" + escapeHtml(f.name) + "</h3>" +
+        "<h3>" + escapeHtml(f.name) +
+          (f.pronouns ? ' <span class="fac-pronouns">' + escapeHtml(f.pronouns) + "</span>" : "") +
+          "</h3>" +
         '<p class="loc">' + escapeHtml(f.location || "") + "</p>" +
         '<p class="bio">' + escapeHtml(f.bio_short || "") + "</p>" +
         '<div class="mods">' + mods + "</div>" +
