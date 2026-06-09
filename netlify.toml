@@ -7,10 +7,15 @@
 #
 # How "ignore" works: exit 0 = skip the build, exit 1 = build.
 # `git diff --quiet ... -- <paths>` exits 0 when those paths are unchanged.
+#
+# We diff against $CACHED_COMMIT_REF (the last commit Netlify actually deployed)
+# rather than HEAD^. This is robust across merge commits and previously-skipped
+# builds: HEAD^ on a merge commit only shows one parent's diff and can wrongly
+# skip real changes. Comparing to the last deployed commit never misses them.
 
 [build]
   publish = "."
-  ignore = "git diff --quiet HEAD^ HEAD -- . ':!pipeline/state.json' ':!pipeline/geocode_cache.json'"
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ':!pipeline/state.json' ':!pipeline/geocode_cache.json'"
 
 [functions]
   directory = "netlify/functions"
