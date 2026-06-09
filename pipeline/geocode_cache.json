@@ -922,5 +922,13 @@
   "gaia terra, gaia terra, italy": {
     "lat": null,
     "lng": null
+  },
+  "casa mirua, casa mirua, spain": {
+    "lat": null,
+    "lng": null
+  },
+  "il mulino, il mulino, italy": {
+    "lat": 43.2814337,
+    "lng": 11.968759
   }
 }
