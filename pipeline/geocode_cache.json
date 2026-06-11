@@ -946,5 +946,17 @@
   "studio burdąg, studio burdąg, poland": {
     "lat": null,
     "lng": null
+  },
+  "portland, or, united states": {
+    "lat": 45.5202471,
+    "lng": -122.674194
+  },
+  "aztec, nm, united states": {
+    "lat": 36.8220629,
+    "lng": -107.992899
+  },
+  "roelands village, wa, australia": {
+    "lat": -33.3202495,
+    "lng": 115.8812647
   }
 }
