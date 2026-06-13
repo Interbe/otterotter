@@ -958,5 +958,29 @@
   "roelands village, wa, australia": {
     "lat": -33.3202495,
     "lng": 115.8812647
+  },
+  "near lugo, spain": {
+    "lat": null,
+    "lng": null
+  },
+  "near erfurt, germany": {
+    "lat": null,
+    "lng": null
+  },
+  "near lyon, france": {
+    "lat": null,
+    "lng": null
+  },
+  "near turku, finland": {
+    "lat": null,
+    "lng": null
+  },
+  "near lublin, poland": {
+    "lat": null,
+    "lng": null
+  },
+  "near stockholm, sweden": {
+    "lat": 59.3294531,
+    "lng": 18.0672982
   }
 }
