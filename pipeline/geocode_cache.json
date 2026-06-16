@@ -982,5 +982,9 @@
   "near stockholm, sweden": {
     "lat": 59.3294531,
     "lng": 18.0672982
+  },
+  "la bergerie, france": {
+    "lat": 48.5682884,
+    "lng": 7.0279184
   }
 }
