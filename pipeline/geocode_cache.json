@@ -986,5 +986,13 @@
   "la bergerie, france": {
     "lat": 48.5682884,
     "lng": 7.0279184
+  },
+  "bellows falls, united states": {
+    "lat": 43.134063,
+    "lng": -72.444534
+  },
+  "london, united kingdom": {
+    "lat": 51.5074456,
+    "lng": -0.1277653
   }
 }
