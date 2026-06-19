@@ -994,5 +994,13 @@
   "london, united kingdom": {
     "lat": 51.5074456,
     "lng": -0.1277653
+  },
+  "la bergerie, la bergerie, france": {
+    "lat": 47.6848304,
+    "lng": 4.8413482
+  },
+  "estúdio yucca, estúdio yucca, portugal": {
+    "lat": null,
+    "lng": null
   }
 }
