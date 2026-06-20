@@ -1002,5 +1002,13 @@
   "estúdio yucca, estúdio yucca, portugal": {
     "lat": null,
     "lng": null
+  },
+  "arambol, india": {
+    "lat": 15.6878815,
+    "lng": 73.7055986
+  },
+  "montecito, buenos aires, argentina": {
+    "lat": -34.0287677,
+    "lng": -60.5128287
   }
 }
